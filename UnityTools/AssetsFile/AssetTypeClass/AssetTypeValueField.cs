@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace UnityTools
 {
@@ -117,6 +118,106 @@ namespace UnityTools
                 default:
                     return EnumValueTypes.None;
             }
+        }
+
+        public void Write(AssetsFileWriter writer, int depth = 0)
+        {
+            if (TemplateField.isArray)
+            {
+                if (TemplateField.valueType == EnumValueTypes.ByteArray)
+                {
+                    var byteArray = GetValue().value.asByteArray;
+
+                    byteArray.size = (uint)byteArray.data.Length;
+                    writer.Write(byteArray.size);
+                    writer.Write(byteArray.data);
+                    if (TemplateField.align) writer.Align();
+                }
+                else
+                {
+                    var array = GetValue().value.asArray;
+
+                    array.size = ChildrenCount;
+                    writer.Write(array.size);
+                    for (var i = 0; i < array.size; i++)
+                    {
+                        Get(i).Write(writer, depth + 1);
+                    }
+                    if (TemplateField.align) writer.Align();
+                }
+            }
+            else
+            {
+                if (ChildrenCount == 0)
+                {
+                    switch (TemplateField.valueType)
+                    {
+                        case EnumValueTypes.Int8:
+                            writer.Write(GetValue().value.asInt8);
+                            if (TemplateField.align) writer.Align();
+                            break;
+                        case EnumValueTypes.UInt8:
+                            writer.Write(GetValue().value.asUInt8);
+                            if (TemplateField.align) writer.Align();
+                            break;
+                        case EnumValueTypes.Bool:
+                            writer.Write(GetValue().value.asBool);
+                            if (TemplateField.align) writer.Align();
+                            break;
+                        case EnumValueTypes.Int16:
+                            writer.Write(GetValue().value.asInt16);
+                            if (TemplateField.align) writer.Align();
+                            break;
+                        case EnumValueTypes.UInt16:
+                            writer.Write(GetValue().value.asUInt16);
+                            if (TemplateField.align) writer.Align();
+                            break;
+                        case EnumValueTypes.Int32:
+                            writer.Write(GetValue().value.asInt32);
+                            break;
+                        case EnumValueTypes.UInt32:
+                            writer.Write(GetValue().value.asUInt32);
+                            break;
+                        case EnumValueTypes.Int64:
+                            writer.Write(GetValue().value.asInt64);
+                            break;
+                        case EnumValueTypes.UInt64:
+                            writer.Write(GetValue().value.asUInt64);
+                            break;
+                        case EnumValueTypes.Float:
+                            writer.Write(GetValue().value.asFloat);
+                            break;
+                        case EnumValueTypes.Double:
+                            writer.Write(GetValue().value.asDouble);
+                            break;
+                        case EnumValueTypes.String:
+                            var str = GetValue().value.asString;
+                            writer.Write(str.Length);
+                            writer.Write(str);
+                            writer.Align();
+                            break;
+                    }
+                }
+                else
+                {
+                    foreach (var child in Children)
+                    {
+                        child.Write(writer, depth + 1);
+                    }
+                    if (TemplateField.align) writer.Align();
+                }
+            }
+        }
+
+        public byte[] WriteToByteArray(bool bigEndian = false)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new AssetsFileWriter(ms)
+            {
+                BigEndian = bigEndian
+            };
+            Write(writer);
+            return ms.ToArray();
         }
     }
 }

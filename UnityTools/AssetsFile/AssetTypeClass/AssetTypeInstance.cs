@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace UnityTools
 {
@@ -43,9 +44,28 @@ namespace UnityTools
         {
             if (index < 0 || index >= BaseFieldCount)
                 return false;
-            var valueField = GetBaseField(index);
+            var valueField = BaseFields[index];
             valueField.SetChildrenList(children);
             return true;
+        }
+
+        public void Write(AssetsFileWriter writer)
+        {
+            foreach (var baseField in BaseFields)
+            {
+                baseField.Write(writer);
+            }
+        }
+
+        public byte[] WriteToByteArray(bool bigEndian = false)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new AssetsFileWriter(ms)
+            {
+                BigEndian = bigEndian
+            };
+            Write(writer);
+            return ms.ToArray();
         }
     }
 }
