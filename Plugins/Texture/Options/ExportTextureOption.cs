@@ -103,7 +103,11 @@ namespace Plugins.Texture.Options
         public bool SingleExport(IWin32Window owner, AssetsWorkspace workspace, AssetItem selectedItem)
         {
             var fileInst = selectedItem.Cont.FileInstance;
-            var texField = TextureHelper.GetByteArrayTexture(workspace, selectedItem).GetBaseField();
+            if (!selectedItem.Cont.HasInstance)
+            {
+                selectedItem.Cont = new AssetContainer(selectedItem.Cont, TextureHelper.GetByteArrayTexture(workspace, selectedItem));
+            }
+            var texField = selectedItem.Cont.TypeInstance.GetBaseField();
             var texFile = TextureFile.ReadTextureFile(texField);
             var fixedName = Extensions.ReplaceInvalidFileNameChars(texFile.m_Name);
             var sfd = new SaveFileDialog

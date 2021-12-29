@@ -289,7 +289,35 @@ bun.file = BundleHelper.UnpackBundleToStream(bun.file, bunDecompStream);
 
 ### Write a bundle file
 
-**Warning: due to a write bug, this option is temporarily suspended until the next update. I apologize for the inconvenience.**
+Bundle writing works similar to assets files where you use replacers to replace files in the bundle.
+Note that when you create a `BundleReplacer`, you have the option of renaming the asset in the bundle, or you can use the same name (or make `newName` null) to not rename the asset at all.
+```cs
+var am = new AssetsManager();
+am.LoadClassPackage("classdata.tpk");
+var bunInst = am.LoadBundleFile("examplebundle.unity3d");
+//read the example file from the bundle
+var inst = am.LoadAssetsFileFromBundle(bunInst, "example");
+//load class database in the rare case this bundle has no type info
+if (!inst.file.typeTree.hasTypeTree)
+    am.LoadClassDatabaseFromPackage(inst.file.typeTree.unityVersion);
+var inf = inst.table.GetAssetInfo("MyExampleAsset");
+var baseField = am.GetTypeInstance(inst, inf).GetBaseField();
+baseField.Get("m_Name").GetValue().Set("MyRenamedExampleAsset");
+var newGoBytes = baseField.WriteToByteArray();
+var replacer = new AssetsReplacerFromMemory(0, inf.index, inf.curFileType, 0xffff, newGoBytes);
+//write changes to memory
+byte[] newAssetData;
+using (var stream = new MemoryStream())
+using (var writer = new AssetsFileWriter(stream))
+{
+    inst.file.Write(writer, 0, new List<AssetsReplacer>() { repl }, 0);
+    newAssetData = stream.ToArray();
+}
+//rename this asset name from example to renamed-example when saving
+var bunRepl = new BundleReplacerFromMemory("example", "renamed-example", true, newAssetData, -1);
+var bunWriter = new AssetsFileWriter(File.OpenWrite("coolbundle.unity3d"));
+bunInst.file.Write(bunWriter, new List<BundleReplacer>() { bunRepl });
+```
 
 ### Compress a bundle file
 
@@ -301,7 +329,7 @@ var bun = am.LoadBundleFile("uncompressedbundle.unity3d");
 using (var stream = File.OpenWrite("compressedbundle.unity3d"))
 using (var writer = new AssetsFileWriter(stream))
 {
-    bun.Pack(bun.reader, writer, AssetBundleCompressionType.LZMA);
+    bun.file.Pack(bun.file.reader, writer, AssetBundleCompressionType.LZMA);
 }
 ```
 
@@ -323,8 +351,8 @@ If you are using a bundle with type info, `GetTypeInstance()` or `GetExtAsset()`
 If you are adding a MonoBehaviour to a replacer, you'll need to give the replacer a mono id. Each unique script gets a unique mono id per file. For example, all MonoBehaviours using Script1.cs will be mono id 0 and all MonoBehaviours using Script2.cs will be mono id 1. To figure out which mono id your asset is, use `AssetHelper.GetScriptIndex()`.
 
 ```cs
-var repl = new AssetsReplacerFromMemory(
-    0, monoBehaviourInf.index, (int)monoInf.curFileType,
+var replacer = new AssetsReplacerFromMemory(
+    0, monoBehaviourInf.index, monoInf.curFileType,
     AssetHelper.GetScriptIndex(inst.file, monoInf), newMonoBytes
 );
 ```

@@ -21,7 +21,7 @@ namespace AssetsAdvancedEditor.Winforms
             Items = new List<AssetItem>();
         }
 
-        private void AddAssetDialog_Load(object sender, EventArgs e)
+        private void AddAssetsDialog_Load(object sender, EventArgs e)
         {
             var i = 0;
             foreach (var fileInst in Workspace.LoadedFiles)

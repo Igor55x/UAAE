@@ -223,7 +223,7 @@ namespace AssetsAdvancedEditor.Winforms
             this.Name = "AddAssetsDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Add assets";
-            this.Load += new System.EventHandler(this.AddAssetDialog_Load);
+            this.Load += new System.EventHandler(this.AddAssetsDialog_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

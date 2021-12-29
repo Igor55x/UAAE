@@ -35,16 +35,13 @@ namespace AssetsAdvancedEditor.Winforms
             try
             {
                 var bw = new BackgroundWorker();
-                bw.DoWork += delegate
+                var sfd = new SaveFileDialog
                 {
-                    var sfd = new SaveFileDialog
-                    {
-                        FileName = BundleInst.name + ".packed",
-                        Filter = @"All types (*.*)|*.*"
-                    };
-                    if (sfd.ShowDialog() != DialogResult.OK) return;
-                    CompressBundle(BundleInst, sfd.FileName, compType);
+                    FileName = BundleInst.name + ".packed",
+                    Filter = @"All types (*.*)|*.*"
                 };
+                if (sfd.ShowDialog() != DialogResult.OK) return;
+                bw.DoWork += delegate { CompressBundle(BundleInst, sfd.FileName, compType); };
                 bw.RunWorkerCompleted += delegate
                 {
                     MsgBoxUtils.ShowInfoDialog("The bundle file has been successfully packed!", MessageBoxButtons.OK);

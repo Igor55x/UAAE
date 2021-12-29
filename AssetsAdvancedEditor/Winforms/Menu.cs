@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Assets;
 using AssetsAdvancedEditor.Utils;
@@ -71,12 +72,7 @@ namespace AssetsAdvancedEditor.Winforms
             {
                 case DetectedFileType.AssetsFile:
                 {
-                    var fileInst = Am.LoadAssetsFile(selectedFile, true);
-
-                    if (!LoadOrAskCldb(fileInst))
-                        return;
-
-                    new AssetsViewer(Am, fileInst).ShowDialog();
+                    LoadAssetsFile(selectedFile);
                     break;
                 }
                 case DetectedFileType.BundleFile:
@@ -120,6 +116,16 @@ namespace AssetsAdvancedEditor.Winforms
                 Application.Exit();
         }
 
+        private async void LoadAssetsFile(string path)
+        {
+            var fileInst = Am.LoadAssetsFile(path, true);
+
+            if (!await LoadOrAskCldb(fileInst))
+                return;
+
+            new AssetsViewer(Am, fileInst).ShowDialog();
+        }
+
         private void LoadBundle(string path)
         {
             BundleInst = Am.LoadBundleFile(path, false);
@@ -150,12 +156,7 @@ namespace AssetsAdvancedEditor.Winforms
         {
             if (BundleInst == null) return;
 
-            /*
-              Warning: due to a write bug, this option is temporarily suspended until the next update.
-              I apologize for the inconvenience.
-            */
-
-            /*using (var fs = File.OpenWrite(path))
+            using (var fs = File.OpenWrite(path))
             using (var writer = new AssetsFileWriter(fs))
             {
                 BundleInst.file.Write(writer, ModifiedFiles.Values.ToList());
@@ -176,7 +177,7 @@ namespace AssetsAdvancedEditor.Winforms
                         cboxBundleContents.SelectedIndex = selIndex;
                     }
                 }
-            }*/
+            }
         }
 
         private void CloseAllFiles()
@@ -201,13 +202,13 @@ namespace AssetsAdvancedEditor.Winforms
             lblFileName.Text = @"No file opened.";
         }
 
-        private bool LoadOrAskCldb(AssetsFileInstance fileInst)
+        private async Task<bool> LoadOrAskCldb(AssetsFileInstance fileInst)
         {
             var unityVersion = fileInst.file.typeTree.unityVersion;
             if (Am.LoadClassDatabaseFromPackage(unityVersion) == null)
             {
                 var version = new VersionDialog(unityVersion, Am.classPackage);
-                if (version.ShowDialog() != DialogResult.OK)
+                if (await Task.Run(() => version.ShowDialog()) != DialogResult.OK)
                     return false;
 
                 if (version.SelectedCldb != null)
@@ -315,7 +316,7 @@ namespace AssetsAdvancedEditor.Winforms
                 cboxBundleContents.SelectedIndex = 0;
         }
 
-        private void btnInfo_Click(object sender, EventArgs e)
+        private async void btnInfo_Click(object sender, EventArgs e)
         {
             if (BundleInst == null || cboxBundleContents.SelectedItem == null) return;
             var index = cboxBundleContents.SelectedIndex;
@@ -348,7 +349,7 @@ namespace AssetsAdvancedEditor.Winforms
                 var assetMemPath = Path.Combine(BundleInst.path, bunAssetName);
                 var fileInst = Am.LoadAssetsFile(assetStream, assetMemPath, true);
 
-                if (!LoadOrAskCldb(fileInst))
+                if (!await LoadOrAskCldb(fileInst))
                     return;
 
                 var info = new AssetsViewer(Am, fileInst, true);

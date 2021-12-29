@@ -53,6 +53,7 @@
             Hash.Write(writer);
             if (header.Version >= 6)
             {
+                BlockCount = BlocksInfo.Length;
                 writer.Write(BlockCount);
                 for (var i = 0; i < BlockCount; i++)
                 {
@@ -61,6 +62,7 @@
 
                 if (header.IsBlocksAndDirectoryInfoCombined())
                 {
+                    DirectoryCount = DirectoryInfo.Length;
                     writer.Write(DirectoryCount);
                     for (var i = 0; i < DirectoryCount; i++)
                     {
@@ -70,6 +72,7 @@
             }
             else
             {
+                DirectoryCount = DirectoryInfo.Length;
                 writer.Write(DirectoryCount);
                 for (var i = 0; i < DirectoryCount; i++)
                 {

@@ -100,8 +100,10 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var reader = new AssetsFileReader(previewStream);
-                reader.BigEndian = false;
+                var reader = new AssetsFileReader(previewStream)
+                {
+                    BigEndian = false
+                };
                 item.Position = 0L;
                 item.Cont = new AssetContainer(reader, forInstance);
                 UpdateAssetInfo(ref item, replacer);

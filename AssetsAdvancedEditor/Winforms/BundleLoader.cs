@@ -60,7 +60,7 @@ namespace AssetsAdvancedEditor.Winforms
             if (result != DialogResult.OK)
             {
                 if (result != DialogResult.Abort)
-                    DialogResult = DialogResult.Cancel;
+                    Close();
                 return;
             }
 

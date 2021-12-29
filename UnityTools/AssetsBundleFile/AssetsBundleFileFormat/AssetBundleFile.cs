@@ -40,7 +40,7 @@ namespace UnityTools
         public bool Write(AssetsFileWriter writer, List<BundleReplacer> replacers, ClassDatabaseFile typeMeta = null)
         {
             Header.Write(writer);
-            var newBundleInf6 = new AssetBundleMetadata
+            var newMetadata = new AssetBundleMetadata
             {
                 Hash = new Hash128(new byte[16]),
                 //I could map the assets to their blocks but I don't
@@ -147,8 +147,8 @@ namespace UnityTools
 
             //write the listings
             var bundleInfPos = writer.Position;
-            newBundleInf6.DirectoryInfo = dirInfos.ToArray(); //this is only here to allocate enough space so it's fine if it's inaccurate
-            newBundleInf6.Write(Header, writer);
+            newMetadata.DirectoryInfo = dirInfos.ToArray(); //this is only here to allocate enough space so it's fine if it's inaccurate
+            newMetadata.Write(Header, writer);
 
             var assetDataPos = writer.Position;
 
@@ -188,15 +188,15 @@ namespace UnityTools
             var assetSize = (uint)(finalSize - assetDataPos);
 
             writer.Position = bundleInfPos;
-            newBundleInf6.BlocksInfo[0].DecompressedSize = assetSize;
-            newBundleInf6.BlocksInfo[0].CompressedSize = assetSize;
-            newBundleInf6.DirectoryInfo = dirInfos.ToArray();
-            newBundleInf6.Write(Header, writer);
+            newMetadata.BlocksInfo[0].DecompressedSize = assetSize;
+            newMetadata.BlocksInfo[0].CompressedSize = assetSize;
+            newMetadata.DirectoryInfo = dirInfos.ToArray();
+            newMetadata.Write(Header, writer);
 
             var infoSize = (uint)(assetDataPos - bundleInfPos);
 
             writer.Position = 0;
-            var newBundleHeader6 = new AssetBundleHeader
+            var newHeader = new AssetBundleHeader
             {
                 Signature = Header.Signature,
                 Version = Header.Version,
@@ -207,7 +207,7 @@ namespace UnityTools
                 DecompressedSize = infoSize,
                 Flags = Header.Flags & unchecked((uint)~0x80) & unchecked((uint)~0x3f) //unset info at end flag and compression value
             };
-            newBundleHeader6.Write(writer);
+            newHeader.Write(writer);
             return true;
         }
 
@@ -318,10 +318,8 @@ namespace UnityTools
                                 reader.BaseStream.CopyToCompat(tempMs, info.CompressedSize);
                                 tempMs.Position = 0;
 
-                                using (var decoder = new Lz4DecoderStream(tempMs))
-                                {
-                                    decoder.CopyToCompat(writer.BaseStream, info.DecompressedSize);
-                                }
+                                using var decoder = new Lz4DecoderStream(tempMs);
+                                decoder.CopyToCompat(writer.BaseStream, info.DecompressedSize);
                             }
                             break;
                     }
