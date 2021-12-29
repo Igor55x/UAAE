@@ -74,142 +74,122 @@ namespace UnityTools
             foreach (var replacer in replacers)
             {
                 var replacerClassId = replacer.GetClassID();
-                if (typeTree.unity5Types.All(t => t.ClassID != replacerClassId))
+                var replacerScriptIndex = replacer.GetMonoScriptID();
+                if (!typeTree.unity5Types.Any(t => t.ClassID == replacerClassId && t.ScriptIndex == replacerScriptIndex))
                 {
-                    var type_0D = new Type_0D
-                    {
-                        ClassID = replacer.GetClassID(),
-                        IsStrippedType = false,
-                        ScriptIndex = 0xFFFF,
-                        TypeHash = new Hash128(),
-                        ChildrenCount = 0,
-                        stringTableLen = 0,
-                        stringTable = ""
-                    };
+                    Type_0D type = null;
 
                     if (typeMeta != null)
                     {
                         var cldbType = AssetHelper.FindAssetClassByID(typeMeta, replacerClassId);
                         if (cldbType != null)
                         {
-                            type_0D = C2T5.Cldb2TypeTree(typeMeta, cldbType);
+                            type = C2T5.Cldb2TypeTree(typeMeta, cldbType);
+                            type.ScriptIndex = replacerScriptIndex;
                         }
                     }
 
-                    typeTree.unity5Types.Add(type_0D);
-                }
-            }
-            typeTree.Write(writer, header.Version);
-
-            var initialSize = (int)(AssetFileInfo.GetSize(header.Version) * AssetCount);
-            var newSize = (int)(AssetFileInfo.GetSize(header.Version) * (AssetCount + replacers.Count));
-            var appendedSize = newSize - initialSize;
-            reader.Position = AssetTablePos;
-
-            var assetInfos = new List<AssetFileInfo>();
-            var originalAssetInfos = new Dictionary<long, AssetFileInfo>();
-            var currentReplacers = replacers.ToDictionary(r => r.GetPathID());
-            uint currentOffset = 0;
-
-            //calculate sizes/offsets for original assets, modify sizes if needed and skip those to be removed
-            for (var i = 0; i < AssetCount; i++)
-            {
-                var info = new AssetFileInfo();
-                info.Read(header.Version, reader);
-                originalAssetInfos.Add(info.index, info);
-                var newInfo = new AssetFileInfo
-                {
-                    index = info.index,
-                    curFileOffset = currentOffset,
-                    curFileSize = info.curFileSize,
-                    curFileTypeOrIndex = info.curFileTypeOrIndex,
-                    inheritedUnityClass = info.inheritedUnityClass,
-                    scriptIndex = info.scriptIndex,
-                    stripped = info.stripped
-                };
-                if (currentReplacers.TryGetValue(newInfo.index, out var replacer))
-                {
-                    currentReplacers.Remove(newInfo.index);
-                    if (replacer.GetReplacementType() == AssetsReplacementType.AddOrModify)
+                    if (type == null)
                     {
-                        var classIndex = replacer.GetMonoScriptID() == 0xFFFF ? typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID()) : typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID() && t.ScriptIndex == replacer.GetMonoScriptID());
-                        newInfo = new AssetFileInfo
+                        type = new Type_0D
                         {
-                            index = replacer.GetPathID(),
-                            curFileOffset = currentOffset,
-                            curFileSize = (uint)replacer.GetSize(),
-                            curFileTypeOrIndex = classIndex,
-                            inheritedUnityClass = (ushort)replacer.GetClassID(), //for older unity versions
-                            scriptIndex = replacer.GetMonoScriptID(),
-                            stripped = false
+                            ClassID = replacerClassId,
+                            IsStrippedType = false,
+                            ScriptIndex = replacerScriptIndex,
+                            TypeHash = new Hash128(),
+                            ChildrenCount = 0,
+                            stringTableLen = 0,
+                            stringTable = ""
                         };
                     }
-                    else if (replacer.GetReplacementType() == AssetsReplacementType.Remove)
-                    {
-                        continue;
-                    }
-                }
-                currentOffset += newInfo.curFileSize;
-                currentOffset = (currentOffset + 7) >> 3 << 3; //pad to 8 bytes
 
-                assetInfos.Add(newInfo);
+                    typeTree.unity5Types.Add(type);
+                }
             }
 
-            //calculate sizes/offsets for new assets
-            foreach (var replacerPair in currentReplacers)
+            typeTree.Write(writer, header.Version);
+
+            Dictionary<long, AssetFileInfo> oldAssetInfosByPathId = new Dictionary<long, AssetFileInfo>();
+            Dictionary<long, AssetsReplacer> replacersByPathId = replacers.ToDictionary(r => r.GetPathID());
+            List<AssetFileInfo> newAssetInfos = new List<AssetFileInfo>();
+
+            // Collect unchanged assets (that aren't getting removed)
+            reader.Position = AssetTablePos;
+
+            for (var i = 0; i < AssetCount; i++)
             {
-                var replacer = replacerPair.Value;
-                if (replacer.GetReplacementType() == AssetsReplacementType.AddOrModify)
+                var oldAssetInfo = new AssetFileInfo();
+                oldAssetInfo.Read(header.Version, reader);
+                oldAssetInfosByPathId.Add(oldAssetInfo.index, oldAssetInfo);
+
+                if (replacersByPathId.ContainsKey(oldAssetInfo.index))
+                    continue;
+
+                var newAssetInfo = new AssetFileInfo
                 {
-                    int classIndex;
-                    if (replacer.GetMonoScriptID() == 0xFFFF)
-                        classIndex = typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID());
-                    else
-                        classIndex = typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID() && t.ScriptIndex == replacer.GetMonoScriptID());
-                    var info = new AssetFileInfo()
-                    {
-                        index = replacer.GetPathID(),
-                        curFileOffset = currentOffset,
-                        curFileSize = (uint)replacer.GetSize(),
-                        curFileTypeOrIndex = classIndex,
-                        inheritedUnityClass = (ushort)replacer.GetClassID(),
-                        scriptIndex = replacer.GetMonoScriptID(),
-                        stripped = false
-                    };
-                    currentOffset += info.curFileSize;
-                    currentOffset = (currentOffset + 7) >> 3 << 3; //pad to 8 bytes
-
-                    assetInfos.Add(info);
-                }
+                    index = oldAssetInfo.index,
+                    curFileTypeOrIndex = oldAssetInfo.curFileTypeOrIndex,
+                    inheritedUnityClass = oldAssetInfo.inheritedUnityClass,
+                    scriptIndex = oldAssetInfo.scriptIndex,
+                    stripped = false
+                };
+                newAssetInfos.Add(newAssetInfo);
             }
 
-            currentReplacers.Clear();
-
-            writer.Write(assetInfos.Count);
-            writer.Align();
-            foreach (var info in assetInfos)
+            // Collect modified and new assets
+            foreach (AssetsReplacer replacer in replacers.Where(r => r.GetReplacementType() == AssetsReplacementType.AddOrModify))
             {
-                info.Write(header.Version, writer);
+                var newAssetInfo = new AssetFileInfo
+                {
+                    index = replacer.GetPathID(),
+                    inheritedUnityClass = (ushort)replacer.GetClassID(), //for older unity versions
+                    scriptIndex = replacer.GetMonoScriptID(),
+                    stripped = false
+                };
+
+                if (header.Version < 0x10)
+                {
+                    newAssetInfo.curFileTypeOrIndex = (int)replacer.GetClassID();
+                }
+                else
+                {
+                    if (replacer.GetMonoScriptID() == 0xFFFF)
+                        newAssetInfo.curFileTypeOrIndex = typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID());
+                    else
+                        newAssetInfo.curFileTypeOrIndex = typeTree.unity5Types.FindIndex(t => t.ClassID == replacer.GetClassID() && t.ScriptIndex == replacer.GetMonoScriptID());
+                }
+
+                newAssetInfos.Add(newAssetInfo);
+            }
+
+            newAssetInfos.Sort((i1, i2) => i1.index.CompareTo(i2.index));
+
+            // Write asset infos (will write again later on to update the offsets and sizes)
+            writer.Write(newAssetInfos.Count);
+            writer.Align();
+            var newAssetTablePos = writer.Position;
+            foreach (AssetFileInfo newAssetInfo in newAssetInfos)
+            {
+                newAssetInfo.Write(header.Version, writer);
             }
 
             preloadTable.Write(writer);
-
             dependencies.Write(writer);
 
-            //temporary fix for secondarytypecount and friends
+            // Temporary fix for secondaryTypeCount and friends
             if (header.Version >= 0x14)
             {
                 writer.Write(0); //secondaryTypeCount
             }
 
-            var metadataSize = (uint)(writer.Position - filePos - 0x13); //0x13 is header - "endianness byte"? (if that's what it even is)
+            var newMetadataSize = (uint)(writer.Position - filePos - 0x13); //0x13 is header - "endianness byte"? (if that's what it even is)
             if (header.Version >= 0x16)
             {
-                //remove larger variation fields as well
-                metadataSize -= 0x1c;
+                // Remove larger variation fields as well
+                newMetadataSize -= 0x1c;
             }
 
-            //for padding only. if all initial data before assetData is more than 0x1000, this is skipped
+            // For padding only. if all initial data before assetData is more than 0x1000, this is skipped
             if (writer.Position < 0x1000)
             {
                 while (writer.Position < 0x1000)
@@ -225,57 +205,56 @@ namespace UnityTools
                     writer.Align16();
             }
 
-            var firstFileOffset = writer.Position;
+            var newDataOffset = writer.Position;
 
-            //write all asset data
-            for (var i = 0; i < assetInfos.Count; i++)
+            // Write all asset data
+            for (var i = 0; i < newAssetInfos.Count; i++)
             {
-                var info = assetInfos[i];
-                var replacer = replacers.FirstOrDefault(n => n.GetPathID() == info.index);
-                if (replacer != null)
+                var newAssetInfo = newAssetInfos[i];
+                newAssetInfo.curFileOffset = writer.Position - newDataOffset;
+
+                if (replacersByPathId.TryGetValue(newAssetInfo.index, out AssetsReplacer replacer))
                 {
-                    if (replacer.GetReplacementType() == AssetsReplacementType.AddOrModify)
-                    {
-                        replacer.Write(writer);
-                        if (i != assetInfos.Count - 1)
-                            writer.Align8();
-                    }
+                    replacer.Write(writer);
                 }
                 else
                 {
-                    if (!originalAssetInfos.TryGetValue(info.index, out var originalInfo)) continue;
-                    reader.Position = header.DataOffset + originalInfo.curFileOffset;
-                    var assetData = reader.ReadBytes((int)originalInfo.curFileSize);
-                    writer.Write(assetData);
-                    if (i != assetInfos.Count - 1)
-                        writer.Align8();
+                    var oldAssetInfo = oldAssetInfosByPathId[newAssetInfo.index];
+                    reader.Position = header.DataOffset + oldAssetInfo.curFileOffset;
+                    reader.BaseStream.CopyToCompat(writer.BaseStream, oldAssetInfo.curFileSize);
                 }
+
+                newAssetInfo.curFileSize = (uint)(writer.Position - (newDataOffset + newAssetInfo.curFileOffset));
+                if (i != newAssetInfos.Count - 1)
+                    writer.Align8();
             }
+
+            var newFileSize = writer.Position - filePos;
 
             var newHeader = new AssetsFileHeader()
             {
-                MetadataSize = header.MetadataSize,
-                FileSize = header.FileSize,
+                MetadataSize = newMetadataSize,
+                FileSize = newFileSize,
                 Version = header.Version,
-                DataOffset = header.DataOffset,
+                DataOffset = newDataOffset,
                 Endianness = header.Endianness,
                 Reserved = header.Reserved,
                 unknown = header.unknown,
                 FromBundle = header.FromBundle
             };
 
-            newHeader.DataOffset = firstFileOffset;
-
-            var fileSizeMarker = writer.Position - filePos;
-
-            reader.Position = newHeader.DataOffset;
-
             writer.Position = filePos;
-            newHeader.MetadataSize = metadataSize;
-            newHeader.FileSize = fileSizeMarker;
             newHeader.Write(writer);
 
-            writer.Position = fileSizeMarker + filePos;
+            // Write new asset infos again (this time with offsets and sizes filled in)
+            writer.Position = newAssetTablePos;
+            foreach (var newAssetInfo in newAssetInfos)
+            {
+                newAssetInfo.Write(header.Version, writer);
+            }
+
+            // Set writer position back to end of file
+            writer.Position = filePos + newFileSize;
         }
 
         public static bool IsAssetsFile(string filePath)

@@ -186,7 +186,7 @@ var baseField = am.GetTypeInstance(inst, inf).GetBaseField();
 baseField.Get("m_Name").GetValue().Set("MyCoolGameObject");
 var newGoBytes = baseField.WriteToByteArray();
 
-var acer = new AssetsReplacerFromMemory(0, inf.index, (int)inf.curFileType, 0xffff, newGoBytes);
+var replacer = new AssetsReplacerFromMemory(0, inf.index, (int)inf.curFileType, 0xffff, newGoBytes);
 
 using (var stream = File.OpenWrite("resources-modified.assets"))
 using (var writer = new AssetsFileWriter(stream))
