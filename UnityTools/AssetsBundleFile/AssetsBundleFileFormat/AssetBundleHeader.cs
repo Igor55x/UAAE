@@ -54,7 +54,7 @@ namespace UnityTools
         /// </summary>
         public uint Crc;
         /// <summary>
-        /// Minimum number of bytes to read for streamed bundles, equal to BundleSize for normal bundles
+        /// Minimum number of bytes to read for streamed bundles, equal to bundle size for normal bundles
         /// </summary>
         public uint MinimumStreamedBytes;
         /// <summary>
@@ -129,8 +129,8 @@ namespace UnityTools
                 {
                     BlocksInfoSize = reader.ReadUInt32();
                 }
-                //unknown2 = reader.ReadByte();
-                reader.Align();
+                Unknown2 = reader.ReadByte();
+                //reader.Align();
             }
             else
             {
@@ -184,8 +184,8 @@ namespace UnityTools
                 {
                     writer.Write(BlocksInfoSize);
                 }
-                //writer.Write(unknown2);
-                writer.Align();
+                writer.Write(Unknown2);
+                //writer.Align();
             }
             else
             {

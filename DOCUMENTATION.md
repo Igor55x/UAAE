@@ -29,7 +29,7 @@ The library is very low-level, and even with helper functions, some features sti
 
 ### Getting started
 
-To help write code, you'll want to open the file you want to read/write in a tool like UAAE (in this repo) so you can see what assets have what fields.
+To help write code, you'll want to open the file you want to read/write in a tool like UAAE (in this repo) so you can see what assets have what fields or/and make modifications to them.
 
 ### Read an assets file
 
@@ -112,7 +112,7 @@ Or if you want to load assets of a certain type, use `inst.table.GetAssetsOfType
 var table = inst.table;
 foreach (var inf in table.GetAssetsOfType(AssetClassID.GameObject))
 {
-    //...
+    // Do something with gameobjects
 }
 ```
 
@@ -186,12 +186,12 @@ var baseField = am.GetTypeInstance(inst, inf).GetBaseField();
 baseField.Get("m_Name").GetValue().Set("MyCoolGameObject");
 var newGoBytes = baseField.WriteToByteArray();
 
-var repl = new AssetsReplacerFromMemory(0, inf.index, (int)inf.curFileType, 0xffff, newGoBytes);
+var acer = new AssetsReplacerFromMemory(0, inf.index, (int)inf.curFileType, 0xffff, newGoBytes);
 
 using (var stream = File.OpenWrite("resources-modified.assets"))
 using (var writer = new AssetsFileWriter(stream))
 {
-    inst.file.Write(writer, 0, new List<AssetsReplacer>() { repl }, 0);
+    inst.file.Write(writer, 0, new List<AssetsReplacer>() { replacer }, 0);
 }
 
 am.UnloadAllAssetsFiles();
@@ -215,7 +215,7 @@ transform.Get("m_FileID").GetValue().Set(0);
 transform.Get("m_PathID").GetValue().Set(123);
 rigidbody.Get("m_FileID").GetValue().Set(0);
 rigidbody.Get("m_PathID").GetValue().Set(456);
-AssetTypeValueField[] newChildren = new AssetTypeValueField[] 
+var newChildren = new AssetTypeValueField[] 
 {
     transform, rigidbody
 };
@@ -223,10 +223,10 @@ componentArray.SetChildrenList(newChildren);
 //... do replacer stuff
 ```
 
-If you need to add items instead of set, you'll have to use array concat (I know, a little annoying)
+If you need to add item(s) instead of set, you'll have to call `AddChildren()` on it.
 
 ```cs
-componentArray.SetChildrenList(componentArray.children.Concat(newChildren));
+componentArray.AddChildren(newChildren);
 ```
 
 #### Create new asset from scratch

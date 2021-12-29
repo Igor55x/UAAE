@@ -55,6 +55,12 @@ namespace UnityTools
             ChildrenCount++;
         }
 
+        public void AddChildren(AssetTypeValueField[] children)
+        {
+            Children.AddRange(children);
+            ChildrenCount += children.Length;
+        }
+
         public void RemoveChildren(AssetTypeValueField children)
         {
             Children.Remove(children);

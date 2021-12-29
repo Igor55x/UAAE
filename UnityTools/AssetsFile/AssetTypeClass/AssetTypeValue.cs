@@ -6,7 +6,7 @@ namespace UnityTools
     public class AssetTypeValue
     {
         public EnumValueTypes type;
-
+        public ValueTypes value;
         public struct ValueTypes
         {
             private object value;
@@ -94,7 +94,6 @@ namespace UnityTools
                 set => this.value = value;
             }
         }
-        public ValueTypes value;
 
         public AssetTypeValue(EnumValueTypes type, object valueContainer)
         {
@@ -215,7 +214,7 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                 case EnumValueTypes.ByteArray:
                 default:
-                    return "";
+                    return string.Empty;
             }
         }
 
@@ -268,16 +267,15 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.Int8:
-                    return (int)value.asInt8;
+                    return value.asInt8;
                 case EnumValueTypes.Int16:
-                    return (int)value.asInt16;
+                    return value.asInt16;
                 case EnumValueTypes.Int64:
                     return (int)value.asInt64;
-                //new casts
                 case EnumValueTypes.UInt8:
-                    return (int)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (int)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt32:
                     return (int)value.asUInt32;
                 case EnumValueTypes.UInt64:
@@ -300,17 +298,17 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.UInt8:
-                    return (uint)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (uint)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt64:
                     return (uint)value.asUInt64;
                 case EnumValueTypes.Int8:
-                    return (uint)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.Int16:
-                    return (uint)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.Int32:
-                    return (uint)value.asUInt32;
+                    return value.asUInt32;
                 case EnumValueTypes.Int64:
                     return (uint)value.asUInt64;
                 default:
@@ -331,17 +329,17 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.Int8:
-                    return (long)value.asInt8;
+                    return value.asInt8;
                 case EnumValueTypes.Int16:
-                    return (long)value.asInt16;
+                    return value.asInt16;
                 case EnumValueTypes.Int32:
-                    return (long)value.asInt32;
+                    return value.asInt32;
                 case EnumValueTypes.UInt8:
-                    return (long)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (long)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt32:
-                    return (long)value.asUInt32;
+                    return value.asUInt32;
                 case EnumValueTypes.UInt64:
                     return (long)value.asUInt64;
                 default:
@@ -362,19 +360,19 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.UInt8:
-                    return (ulong)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (ulong)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt32:
-                    return (ulong)value.asUInt32;
+                    return value.asUInt32;
                 case EnumValueTypes.Int8:
-                    return (ulong)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.Int16:
-                    return (ulong)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.Int32:
-                    return (ulong)value.asUInt32;
+                    return value.asUInt32;
                 case EnumValueTypes.Int64:
-                    return (ulong)value.asUInt64;
+                    return value.asUInt64;
                 default:
                     return value.asUInt64;
             }
@@ -393,19 +391,19 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.Int8:
-                    return (float)value.asInt8;
+                    return value.asInt8;
                 case EnumValueTypes.Int16:
-                    return (float)value.asInt16;
+                    return value.asInt16;
                 case EnumValueTypes.Int32:
-                    return (float)value.asInt32;
+                    return value.asInt32;
                 case EnumValueTypes.UInt8:
-                    return (float)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (float)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt32:
-                    return (float)value.asUInt32;
+                    return value.asUInt32;
                 default:
-                    return (float)value.asUInt64;
+                    return value.asUInt64;
             }
         }
 
@@ -414,7 +412,7 @@ namespace UnityTools
             switch (type)
             {
                 case EnumValueTypes.Float:
-                    return (double)value.asFloat;
+                    return value.asFloat;
                 case EnumValueTypes.Double:
                     return value.asDouble;
                 case EnumValueTypes.String:
@@ -422,19 +420,19 @@ namespace UnityTools
                 case EnumValueTypes.Array:
                     return 0;
                 case EnumValueTypes.Int8:
-                    return (double)value.asInt8;
+                    return value.asInt8;
                 case EnumValueTypes.Int16:
-                    return (double)value.asInt16;
+                    return value.asInt16;
                 case EnumValueTypes.Int32:
-                    return (double)value.asInt32;
+                    return value.asInt32;
                 case EnumValueTypes.UInt8:
-                    return (double)value.asUInt8;
+                    return value.asUInt8;
                 case EnumValueTypes.UInt16:
-                    return (double)value.asUInt16;
+                    return value.asUInt16;
                 case EnumValueTypes.UInt32:
-                    return (double)value.asUInt32;
+                    return value.asUInt32;
                 default:
-                    return (double)value.asUInt64;
+                    return value.asUInt64;
             }
         }
     }
