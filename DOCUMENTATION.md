@@ -1,4 +1,4 @@
-# UnityTools v2
+# UnityTools
 
 A .net library for reading and modifying unity assets and bundles based off of the AssetsTools library from [UABE](https://github.com/DerPopo/UABE/).
 
@@ -10,7 +10,7 @@ A .net library for reading and modifying unity assets and bundles based off of t
 * [Write an assets file](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#write-an-assets-file)
 * [Value builder (add assets/fields)](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#value-builder-add-assetsfields)
 * [Read a bundle file](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#read-a-bundle-file)
-* [Write a bundle file](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#write-a-bundle-file) **(suspended until next update)**
+* [Write a bundle file](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#write-a-bundle-file)
 * [Compress a bundle file](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#compress-a-bundle-file)
 * Bundle creator (create assets/bundle files) **(todo)**
 * [Reading a MonoBehaviour](https://github.com/Igor55x/UAAE/blob/master/DOCUMENTATION.md#reading-a-monobehaviour)
@@ -191,7 +191,7 @@ var repl = new AssetsReplacerFromMemory(0, inf.index, (int)inf.curFileType, 0xff
 using (var stream = File.OpenWrite("resources-modified.assets"))
 using (var writer = new AssetsFileWriter(stream))
 {
-	inst.file.Write(writer, 0, new List<AssetsReplacer>() { repl }, 0);
+    inst.file.Write(writer, 0, new List<AssetsReplacer>() { repl }, 0);
 }
 
 am.UnloadAllAssetsFiles();
