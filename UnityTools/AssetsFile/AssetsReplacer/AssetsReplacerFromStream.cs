@@ -161,5 +161,10 @@ namespace UnityTools
 
             return writer.Position;
         }
+
+        public override void Dispose()
+        {
+            stream.Dispose();
+        }
     }
 }

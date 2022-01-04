@@ -220,7 +220,7 @@ namespace AssetsAdvancedEditor.Winforms
                     ttType = AssetHelper.FindTypeTreeTypeByID(tt, typeId);
                 }
                 type = ttType.Children[0].GetTypeString(ttType.stringTable);
-                templateField.From0D(ttType, 0);
+                templateField.From0D(ttType);
             }
             return true;
         }

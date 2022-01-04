@@ -18,7 +18,6 @@ namespace UnityTools
             Children = children;
             Value = value;
         }
-        ///public ulong Write(AssetsFileWriter writer, FileStream writerPar, ulong filePos);
 
         public AssetTypeValueField this[string name]
         {

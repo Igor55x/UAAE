@@ -19,11 +19,13 @@ namespace UnityTools
             RecursiveTypeLoad(assembly.MainModule, typeName, children);
             childrenCount = children.Count;
         }
+
         public void Read(string typeName, string assemblyPath, uint format)
         {
             var asmDef = GetAssemblyWithDependencies(assemblyPath);
             Read(typeName, asmDef, format);
         }
+
         public static AssemblyDefinition GetAssemblyWithDependencies(string path)
         {
             var resolver = new DefaultAssemblyResolver();
@@ -34,11 +36,12 @@ namespace UnityTools
             };
             return AssemblyDefinition.ReadAssembly(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read), readerParameters);
         }
+
         public static AssetTypeValueField GetMonoBaseField(AssetsManager am, AssetsFileInstance inst, AssetFileInfoEx info, string managedPath, bool cached = true)
         {
             var file = inst.file;
             var baseField = new AssetTypeTemplateField();
-            baseField.FromClassDatabase(am.classFile, AssetHelper.FindAssetClassByID(am.classFile, info.curFileType), 0);
+            baseField.FromClassDatabase(am.classFile, AssetHelper.FindAssetClassByID(am.classFile, info.curFileType));
             var mainAti = new AssetTypeInstance(baseField, file.reader, info.absoluteFilePos);
             var scriptIndex = AssetHelper.GetScriptIndex(file, info);
             if (scriptIndex != 0xFFFF)
@@ -72,20 +75,20 @@ namespace UnityTools
                     mc.Read(scriptName, asmDef, inst.file.header.Version);
                     var monoTemplateFields = mc.children;
 
-                    var templateField = baseField.children.Concat(monoTemplateFields).ToArray();
-                    baseField.children = templateField;
-                    baseField.childrenCount = baseField.children.Length;
+                    baseField.AddChildren(monoTemplateFields);
 
                     mainAti = new AssetTypeInstance(baseField, file.reader, info.absoluteFilePos);
                 }
             }
             return mainAti.GetBaseField();
         }
+
         private void RecursiveTypeLoad(ModuleDefinition module, string typeName, List<AssetTypeTemplateField> attf)
         {
             var type = module.GetTypes().First(t => t.FullName.Equals(typeName));
             RecursiveTypeLoad(type, attf);
         }
+
         private void RecursiveTypeLoad(TypeDefinition type, List<AssetTypeTemplateField> attf)
         {
             var baseName = type.BaseType.FullName;
@@ -100,6 +103,7 @@ namespace UnityTools
 
             attf.AddRange(ReadTypes(type));
         }
+
         private List<AssetTypeTemplateField> ReadTypes(TypeDefinition type)
         {
             var acceptableFields = GetAcceptableFields(type);
@@ -130,7 +134,7 @@ namespace UnityTools
                 if (IsPrimitiveType(fieldType))
                 {
                     field.childrenCount = 0;
-                    field.children = new AssetTypeTemplateField[] { };
+                    field.children = new List<AssetTypeTemplateField>();
                 }
                 else if (fieldType.Name.Equals("String"))
                 {
@@ -168,6 +172,7 @@ namespace UnityTools
             }
             return localChildren;
         }
+
         private List<FieldDefinition> GetAcceptableFields(TypeDefinition typeDef)
         {
             var validFields = new List<FieldDefinition>();
@@ -203,6 +208,7 @@ namespace UnityTools
             }
             return validFields;
         }
+
         private Dictionary<string, string> baseToPrimitive = new Dictionary<string, string>()
         {
             {"Boolean","bool"},
@@ -219,6 +225,7 @@ namespace UnityTools
             {"Int32","int"},
             {"String","string"}
         };
+
         private string ConvertBaseToPrimitive(string name)
         {
             if (baseToPrimitive.ContainsKey(name))
@@ -227,6 +234,7 @@ namespace UnityTools
             }
             return name;
         }
+
         private bool IsPrimitiveType(TypeDefinition typeDef)
         {
             var name = typeDef.FullName;
@@ -245,6 +253,7 @@ namespace UnityTools
                 name == "System.Int32") return true;
             return false;
         }
+
         private bool IsSpecialUnityType(TypeDefinition typeDef)
         {
             var name = typeDef.FullName;
@@ -263,6 +272,7 @@ namespace UnityTools
                 name == "UnityEngine.GUIStyle") return true;
             return false;
         }
+
         private bool DerivesFromUEObject(TypeDefinition typeDef)
         {
             if (typeDef.IsInterface)
@@ -274,6 +284,7 @@ namespace UnityTools
                 return DerivesFromUEObject(typeDef.BaseType.Resolve());
             return false;
         }
+
         private bool TypeAligns(EnumValueTypes valueType)
         {
             if (valueType.Equals(EnumValueTypes.Bool) ||
@@ -284,82 +295,100 @@ namespace UnityTools
                 return true;
             return false;
         }
+
         private AssetTypeTemplateField SetArray(AssetTypeTemplateField field)
         {
-            var size = new AssetTypeTemplateField();
-            size.name = "size";
-            size.type = "int";
-            size.valueType = EnumValueTypes.Int32;
-            size.isArray = false;
-            size.align = false;
-            size.hasValue = true;
-            size.childrenCount = 0;
-            size.children = new AssetTypeTemplateField[] { };
+            var size = new AssetTypeTemplateField
+            {
+                name = "size",
+                type = "int",
+                valueType = EnumValueTypes.Int32,
+                isArray = false,
+                align = false,
+                hasValue = true,
+                childrenCount = 0,
+                children = new List<AssetTypeTemplateField>()
+            };
 
-            var data = new AssetTypeTemplateField();
-            data.name = string.Copy(field.name);
-            data.type = string.Copy(field.type);
-            data.valueType = field.valueType;
-            data.isArray = false;
-            data.align = false;//IsAlignable(field.valueType);
-            data.hasValue = field.hasValue;
-            data.childrenCount = field.childrenCount;
-            data.children = field.children;
+            var data = new AssetTypeTemplateField
+            {
+                name = string.Copy(field.name),
+                type = string.Copy(field.type),
+                valueType = field.valueType,
+                isArray = false,
+                align = false,//IsAlignable(field.valueType);
+                hasValue = field.hasValue,
+                childrenCount = field.childrenCount,
+                children = field.children
+            };
 
-            var array = new AssetTypeTemplateField();
-            array.name = string.Copy(field.name);
-            array.type = "Array";
-            array.valueType = EnumValueTypes.None;
-            array.isArray = true;
-            array.align = true;
-            array.hasValue = false;
-            array.childrenCount = 2;
-            array.children = new AssetTypeTemplateField[] {
-                size, data
+            var array = new AssetTypeTemplateField
+            {
+                name = string.Copy(field.name),
+                type = "Array",
+                valueType = EnumValueTypes.None,
+                isArray = true,
+                align = true,
+                hasValue = false,
+                childrenCount = 2,
+                children = new List<AssetTypeTemplateField>()
+                {
+                    size, data
+                }
             };
 
             return array;
         }
+
         private void SetString(AssetTypeTemplateField field)
         {
             field.childrenCount = 1;
 
-            var size = new AssetTypeTemplateField();
-            size.name = "size";
-            size.type = "int";
-            size.valueType = EnumValueTypes.Int32;
-            size.isArray = false;
-            size.align = false;
-            size.hasValue = true;
-            size.childrenCount = 0;
-            size.children = new AssetTypeTemplateField[] { };
-
-            var data = new AssetTypeTemplateField();
-            data.name = "data";
-            data.type = "char";
-            data.valueType = EnumValueTypes.UInt8;
-            data.isArray = false;
-            data.align = false;
-            data.hasValue = true;
-            data.childrenCount = 0;
-            data.children = new AssetTypeTemplateField[] { };
-
-            var array = new AssetTypeTemplateField();
-            array.name = "Array";
-            array.type = "Array";
-            array.valueType = EnumValueTypes.None;
-            array.isArray = true;
-            array.align = true;
-            array.hasValue = false;
-            array.childrenCount = 2;
-            array.children = new AssetTypeTemplateField[] {
-                size, data
+            var size = new AssetTypeTemplateField
+            {
+                name = "size",
+                type = "int",
+                valueType = EnumValueTypes.Int32,
+                isArray = false,
+                align = false,
+                hasValue = true,
+                childrenCount = 0,
+                children = new List<AssetTypeTemplateField>()
             };
 
-            field.children = new AssetTypeTemplateField[] {
+            var data = new AssetTypeTemplateField
+            {
+                name = "data",
+                type = "char",
+                valueType = EnumValueTypes.UInt8,
+                isArray = false,
+                align = false,
+                hasValue = true,
+                childrenCount = 0,
+                children = new List<AssetTypeTemplateField>()
+            };
+
+            var array = new AssetTypeTemplateField
+            {
+                name = "Array",
+                type = "Array",
+                valueType = EnumValueTypes.None,
+                isArray = true,
+                align = true,
+                hasValue = false,
+                childrenCount = 2,
+                children = new List<AssetTypeTemplateField>()
+                {
+                    size, data
+                }
+            };
+
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 array
             };
         }
+
         private void SetPPtr(AssetTypeTemplateField field, bool dollar)
         {
             if (dollar)
@@ -368,18 +397,22 @@ namespace UnityTools
                 field.type = $"PPtr<{field.type}>";
             field.childrenCount = 2;
 
-            var fileID = new AssetTypeTemplateField();
-            fileID.name = "m_FileID";
-            fileID.type = "int";
-            fileID.valueType = EnumValueTypes.Int32;
-            fileID.isArray = false;
-            fileID.align = false;
-            fileID.hasValue = true;
-            fileID.childrenCount = 0;
-            fileID.children = new AssetTypeTemplateField[] { };
+            var fileID = new AssetTypeTemplateField
+            {
+                name = "m_FileID",
+                type = "int",
+                valueType = EnumValueTypes.Int32,
+                isArray = false,
+                align = false,
+                hasValue = true,
+                childrenCount = 0,
+                children = new List<AssetTypeTemplateField>()
+            };
 
-            var pathID = new AssetTypeTemplateField();
-            pathID.name = "m_PathID";
+            var pathID = new AssetTypeTemplateField
+            {
+                name = "m_PathID"
+            };
             if (format < 0x0E)
             {
                 pathID.type = "int";
@@ -394,19 +427,22 @@ namespace UnityTools
             pathID.align = false;
             pathID.hasValue = true;
             pathID.childrenCount = 0;
-            pathID.children = new AssetTypeTemplateField[] { };
-            field.children = new AssetTypeTemplateField[] {
+            pathID.children = new List<AssetTypeTemplateField>();
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 fileID, pathID
             };
         }
+
         private void SetSerialized(AssetTypeTemplateField field, TypeDefinition type)
         {
             var types = new List<AssetTypeTemplateField>();
             RecursiveTypeLoad(type, types);
             field.childrenCount = types.Count;
-            field.children = types.ToArray();
+            field.children = types.ToList();
         }
-        #region special unity serialization
+
+        #region Special unity serialization
         private void SetSpecialUnity(AssetTypeTemplateField field, TypeDefinition type)
         {
             switch (type.Name)
@@ -437,6 +473,7 @@ namespace UnityTools
                     break;
             }
         }
+
         private void SetGradient(AssetTypeTemplateField field)
         {
             field.childrenCount = 27;
@@ -467,18 +504,21 @@ namespace UnityTools
             var m_Mode = CreateTemplateField("m_Mode", "int", EnumValueTypes.Int32);
             var m_NumColorKeys = CreateTemplateField("m_NumColorKeys", "UInt8", EnumValueTypes.UInt8);
             var m_NumAlphaKeys = CreateTemplateField("m_NumAlphaKeys", "UInt8", EnumValueTypes.UInt8, false, true);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 key0, key1, key2, key3, key4, key5, key6, key7, ctime0, ctime1, ctime2, ctime3, ctime4, ctime5, ctime6, ctime7, atime0, atime1, atime2, atime3, atime4, atime5, atime6, atime7, m_Mode, m_NumColorKeys, m_NumAlphaKeys
             };
         }
-        private AssetTypeTemplateField[] RGBAf()
+
+        private List<AssetTypeTemplateField> RGBAf()
         {
             var r = CreateTemplateField("r", "float", EnumValueTypes.Float);
             var g = CreateTemplateField("g", "float", EnumValueTypes.Float);
             var b = CreateTemplateField("b", "float", EnumValueTypes.Float);
             var a = CreateTemplateField("a", "float", EnumValueTypes.Float);
-            return new AssetTypeTemplateField[] { r, g, b, a };
+            return new List<AssetTypeTemplateField>() { r, g, b, a };
         }
+
         private void SetAnimationCurve(AssetTypeTemplateField field)
         {
             field.childrenCount = 4;
@@ -495,53 +535,64 @@ namespace UnityTools
             AssetTypeTemplateField data;
             if (format >= 0x13)
             {
-                data = CreateTemplateField("data", "Keyframe", EnumValueTypes.None, 7, new AssetTypeTemplateField[] {
+                data = CreateTemplateField("data", "Keyframe", EnumValueTypes.None, 7, new List<AssetTypeTemplateField>()
+                {
                     time, value, inSlope, outSlope, weightedMode, inWeight, outWeight
                 });
             }
             else
             {
-                data = CreateTemplateField("data", "Keyframe", EnumValueTypes.None, 4, new AssetTypeTemplateField[] {
+                data = CreateTemplateField("data", "Keyframe", EnumValueTypes.None, 4, new List<AssetTypeTemplateField>()
+                {
                     time, value, inSlope, outSlope
                 });
             }
-            var Array = CreateTemplateField("Array", "Array", EnumValueTypes.Array, true, false, 2, new AssetTypeTemplateField[] {
+            var Array = CreateTemplateField("Array", "Array", EnumValueTypes.Array, true, false, 2, new List<AssetTypeTemplateField>()
+            {
                 size, data
             });
-            var m_Curve = CreateTemplateField("m_Curve", "vector", EnumValueTypes.None, 1, new AssetTypeTemplateField[] {
+            var m_Curve = CreateTemplateField("m_Curve", "vector", EnumValueTypes.None, 1, new List<AssetTypeTemplateField>()
+            {
                 Array
             });
             var m_PreInfinity = CreateTemplateField("m_PreInfinity", "int", EnumValueTypes.Int32);
             var m_PostInfinity = CreateTemplateField("m_PostInfinity", "int", EnumValueTypes.Int32);
             var m_RotationOrder = CreateTemplateField("m_RotationOrder", "int", EnumValueTypes.Int32);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 m_Curve, m_PreInfinity, m_PostInfinity, m_RotationOrder
             };
         }
+
         private void SetBitField(AssetTypeTemplateField field)
         {
             field.childrenCount = 1;
             var m_Bits = CreateTemplateField("m_Bits", "unsigned int", EnumValueTypes.UInt32);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 m_Bits
             };
         }
+
         private void SetAABB(AssetTypeTemplateField field)
         {
             field.childrenCount = 2;
             var m_Center = CreateTemplateField("m_Center", "Vector3f", EnumValueTypes.None, 3, Vec3f());
             var m_Extent = CreateTemplateField("m_Extent", "Vector3f", EnumValueTypes.None, 3, Vec3f());
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 m_Center, m_Extent
             };
         }
-        private AssetTypeTemplateField[] Vec3f()
+
+        private List<AssetTypeTemplateField> Vec3f()
         {
             var x = CreateTemplateField("x", "float", EnumValueTypes.Float);
             var y = CreateTemplateField("y", "float", EnumValueTypes.Float);
             var z = CreateTemplateField("z", "float", EnumValueTypes.Float);
-            return new AssetTypeTemplateField[] { x, y, z };
+            return new List<AssetTypeTemplateField>() { x, y, z };
         }
+
         private void SetRectf(AssetTypeTemplateField field)
         {
             field.childrenCount = 4;
@@ -549,15 +600,18 @@ namespace UnityTools
             var y = CreateTemplateField("y", "float", EnumValueTypes.Float);
             var width = CreateTemplateField("width", "float", EnumValueTypes.Float);
             var height = CreateTemplateField("height", "float", EnumValueTypes.Float);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 x, y, width, height
             };
         }
+
         private void SetGradientRGBAb(AssetTypeTemplateField field)
         {
             field.childrenCount = 1;
             var rgba = CreateTemplateField("rgba", "unsigned int", EnumValueTypes.UInt32);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 rgba
             };
         }
@@ -591,73 +645,85 @@ namespace UnityTools
             var m_FixedHeight = CreateTemplateField("m_FixedHeight", "float", EnumValueTypes.Float);
             var m_StretchWidth = CreateTemplateField("m_StretchWidth", "bool", EnumValueTypes.Bool);
             var m_StretchHeight = CreateTemplateField("m_StretchHeight", "bool", EnumValueTypes.Bool, false, true);
-            field.children = new AssetTypeTemplateField[] {
+            field.children = new List<AssetTypeTemplateField>()
+            {
                 m_Name, m_Normal, m_Hover, m_Active, m_Focused, m_OnNormal, m_OnHover, m_OnActive, m_OnFocused, m_Border, m_Margin, m_Padding, m_Overflow, m_Font, m_FontSize, m_FontStyle, m_Alignment, m_WordWrap, m_RichText, m_TextClipping, m_ImagePosition, m_ContentOffset, m_FixedWidth, m_FixedHeight, m_StretchWidth, m_StretchHeight
             };
         }
-        private AssetTypeTemplateField[] String()
+
+        private List<AssetTypeTemplateField> String()
         {
             var size = CreateTemplateField("size", "int", EnumValueTypes.Int32);
             var data = CreateTemplateField("char", "data", EnumValueTypes.UInt8);
-            var Array = CreateTemplateField("Array", "Array", EnumValueTypes.Array, true, true, 2, new AssetTypeTemplateField[] {
+            var Array = CreateTemplateField("Array", "Array", EnumValueTypes.Array, true, true, 2, new List<AssetTypeTemplateField>()
+            {
                 size, data
             });
-            return new AssetTypeTemplateField[] { Array };
+            return new List<AssetTypeTemplateField>() { Array };
         }
-        private AssetTypeTemplateField[] GUIStyleState()
+
+        private List<AssetTypeTemplateField> GUIStyleState()
         {
             var m_Background = CreateTemplateField("m_Background", "PPtr<Texture2D>", EnumValueTypes.None, 2, PPtr());
             var m_TextColor = CreateTemplateField("m_TextColor", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            return new AssetTypeTemplateField[] { m_Background, m_TextColor };
+            return new List<AssetTypeTemplateField>() { m_Background, m_TextColor };
         }
-        private AssetTypeTemplateField[] RectOffset()
+
+        private List<AssetTypeTemplateField> RectOffset()
         {
             var m_Left = CreateTemplateField("m_Left", "int", EnumValueTypes.Int32);
             var m_Right = CreateTemplateField("m_Right", "int", EnumValueTypes.Int32);
             var m_Top = CreateTemplateField("m_Top", "int", EnumValueTypes.Int32);
             var m_Bottom = CreateTemplateField("m_Bottom", "int", EnumValueTypes.Int32);
-            return new AssetTypeTemplateField[] { m_Left, m_Right, m_Top, m_Bottom };
+            return new List<AssetTypeTemplateField>() { m_Left, m_Right, m_Top, m_Bottom };
         }
-        private AssetTypeTemplateField[] PPtr()
+
+        private List<AssetTypeTemplateField> PPtr()
         {
             var m_FileID = CreateTemplateField("m_FileID", "int", EnumValueTypes.Int32);
             var m_PathID = CreateTemplateField("m_PathID", "SInt64", EnumValueTypes.Int64);
-            return new AssetTypeTemplateField[] { m_FileID, m_PathID };
+            return new List<AssetTypeTemplateField>() { m_FileID, m_PathID };
         }
-        private AssetTypeTemplateField[] Vec2f()
+
+        private List<AssetTypeTemplateField> Vec2f()
         {
             var x = CreateTemplateField("x", "float", EnumValueTypes.Float);
             var y = CreateTemplateField("y", "float", EnumValueTypes.Float);
-            return new AssetTypeTemplateField[] { x, y };
+            return new List<AssetTypeTemplateField>() { x, y };
         }
 
         private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType)
         {
             return CreateTemplateField(name, type, valueType, false, false, 0, null);
         }
+
         private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType, bool isArray, bool align)
         {
             return CreateTemplateField(name, type, valueType, isArray, align, 0, null);
         }
-        private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType, int childrenCount, AssetTypeTemplateField[] children)
+
+        private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType, int childrenCount, List<AssetTypeTemplateField> children)
         {
             return CreateTemplateField(name, type, valueType, false, false, childrenCount, children);
         }
-        private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType, bool isArray, bool align, int childrenCount, AssetTypeTemplateField[] children)
+
+        private AssetTypeTemplateField CreateTemplateField(string name, string type, EnumValueTypes valueType, bool isArray, bool align, int childrenCount, List<AssetTypeTemplateField> children)
         {
-            var field = new AssetTypeTemplateField();
-            field.name = name;
-            field.type = type;
-            field.valueType = valueType;
-            field.isArray = isArray;
-            field.align = align;
-            field.hasValue = valueType != EnumValueTypes.None;
-            field.childrenCount = childrenCount;
-            field.children = children;
-            
+            var field = new AssetTypeTemplateField
+            {
+                name = name,
+                type = type,
+                valueType = valueType,
+                isArray = isArray,
+                align = align,
+                hasValue = valueType != EnumValueTypes.None,
+                childrenCount = childrenCount,
+                children = children
+            };
             return field;
         }
         #endregion
+
         #region .net polyfill
         //https://stackoverflow.com/a/4108907
         private static bool HasFlag(Enum variable, Enum value)
@@ -676,7 +742,7 @@ namespace UnityTools
             }
 
             var num = Convert.ToUInt64(value);
-            return ((Convert.ToUInt64(variable) & num) == num);
+            return (Convert.ToUInt64(variable) & num) == num;
         }
         #endregion
     }

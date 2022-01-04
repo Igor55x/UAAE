@@ -29,10 +29,10 @@ namespace UnityTools
             }
             else
             {
-                valueChildren = new List<AssetTypeValueField>(templateChildren.Length);
-                for (var i = 0; i < templateChildren.Length; i++)
+                valueChildren = new List<AssetTypeValueField>();
+                for (var i = 0; i < templateChildren.Count; i++)
                 {
-                    valueChildren[i] = DefaultValueFieldFromTemplate(templateChildren[i]);
+                    valueChildren.Add(DefaultValueFieldFromTemplate(templateChildren[i]));
                 }
             }
 

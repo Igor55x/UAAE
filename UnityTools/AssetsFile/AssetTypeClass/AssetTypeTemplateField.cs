@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UnityTools
 {
@@ -12,11 +13,11 @@ namespace UnityTools
         public bool align;
         public bool hasValue;
         public int childrenCount;
-        public AssetTypeTemplateField[] children;
+        public List<AssetTypeTemplateField> children;
 
         ///public AssetTypeTemplateField()
         ///public void Clear()
-        public bool From0D(Type_0D u5Type, int fieldIndex)
+        public bool From0D(Type_0D u5Type, int fieldIndex = 0)
         {
             var field = u5Type.Children[fieldIndex];
             name = field.GetNameString(u5Type.stringTable);
@@ -25,69 +26,69 @@ namespace UnityTools
             isArray = field.IsArray;
             align = (field.MetaFlag & 0x4000) != 0x00;
             hasValue = valueType != EnumValueTypes.None;
+            childrenCount = 0;
+            children = new List<AssetTypeTemplateField>();
 
-            var childrenIndexes = new List<int>();
-            int thisDepth = u5Type.Children[fieldIndex].Level;
+            var thisDepth = (int)u5Type.Children[fieldIndex].Level;
             for (var i = fieldIndex + 1; i < u5Type.ChildrenCount; i++)
             {
                 if (u5Type.Children[i].Level == thisDepth + 1)
                 {
+                    var child = new AssetTypeTemplateField();
+                    child.From0D(u5Type, i);
+                    children.Add(child);
                     childrenCount++;
-                    childrenIndexes.Add(i);
-                }
-                if (u5Type.Children[i].Level <= thisDepth) break;
-            }
-            children = new AssetTypeTemplateField[childrenCount];
-            var child = 0;
-            for (var i = fieldIndex + 1; i < u5Type.ChildrenCount; i++)
-            {
-                if (u5Type.Children[i].Level == thisDepth + 1)
-                {
-                    children[child] = new AssetTypeTemplateField();
-                    children[child].From0D(u5Type, childrenIndexes[child]);
-                    child++;
                 }
                 if (u5Type.Children[i].Level <= thisDepth) break;
             }
             return true;
         }
 
-        public bool FromClassDatabase(ClassDatabaseFile file, ClassDatabaseType type, uint fieldIndex)
+        public bool From07(TypeField_07 typeField)
         {
-            var field = type.fields[(int)fieldIndex];
+            name = typeField.Name;
+            type = typeField.Type;
+            valueType = AssetTypeValueField.GetValueTypeByTypeName(type);
+            isArray = Convert.ToBoolean(typeField.IsArray);
+            align = (typeField.MetaFlag & 0x4000) != 0x00;
+            hasValue = valueType != EnumValueTypes.None;
+            childrenCount = (int)typeField.ChildrenCount;
+            children = new List<AssetTypeTemplateField>(childrenCount);
+            for (int i = 0; i < childrenCount; i++)
+            {
+                children[i] = new AssetTypeTemplateField();
+                children[i].From07(typeField.Children[i]);
+            }
+            return true;
+        }
+
+        public bool FromClassDatabase(ClassDatabaseFile file, ClassDatabaseType type, int fieldIndex = 0)
+        {
+            var field = type.fields[fieldIndex];
             name = field.fieldName.GetString(file);
             this.type = field.typeName.GetString(file);
             valueType = AssetTypeValueField.GetValueTypeByTypeName(this.type);
             isArray = field.isArray is 1;
             align = (field.flags2 & 0x4000) != 0x00;
             hasValue = valueType != EnumValueTypes.None;
+            childrenCount = 0;
+            children = new List<AssetTypeTemplateField>();
 
-            var childrenIndexes = new List<int>();
-            int thisDepth = type.fields[(int)fieldIndex].depth;
-            for (var i = (int)fieldIndex + 1; i < type.fields.Count; i++)
+            var thisDepth = (int)type.fields[fieldIndex].depth;
+            for (var i = fieldIndex + 1; i < type.fields.Count; i++)
             {
                 if (type.fields[i].depth == thisDepth + 1)
                 {
+                    var child = new AssetTypeTemplateField();
+                    child.FromClassDatabase(file, type, i);
+                    children.Add(child);
                     childrenCount++;
-                    childrenIndexes.Add(i);
-                }
-                if (type.fields[i].depth <= thisDepth) break;
-            }
-            children = new AssetTypeTemplateField[childrenCount];
-            var child = 0;
-            for (var i = (int)fieldIndex + 1; i < type.fields.Count; i++)
-            {
-                if (type.fields[i].depth == thisDepth + 1)
-                {
-                    children[child] = new AssetTypeTemplateField();
-                    children[child].FromClassDatabase(file, type, (uint)childrenIndexes[child]);
-                    child++;
                 }
                 if (type.fields[i].depth <= thisDepth) break;
             }
             return true;
         }
-        ///public bool From07(TypeField_07 typeField)
+
         public AssetTypeValueField MakeValue(AssetsFileReader reader)
         {
             var valueField = new AssetTypeValueField
@@ -234,6 +235,30 @@ namespace UnityTools
                 }
             }
             return null;
+        }
+
+        public void AddChildren(AssetTypeTemplateField children)
+        {
+            this.children.Add(children);
+            childrenCount++;
+        }
+
+        public void AddChildren(List<AssetTypeTemplateField> children)
+        {
+            this.children.AddRange(children);
+            childrenCount += children.Count;
+        }
+
+        public void RemoveChildren(AssetTypeTemplateField children)
+        {
+            this.children.Remove(children);
+            childrenCount--;
+        }
+
+        public void RemoveChildren(int index)
+        {
+            children.RemoveAt(index);
+            childrenCount--;
         }
     }
 }

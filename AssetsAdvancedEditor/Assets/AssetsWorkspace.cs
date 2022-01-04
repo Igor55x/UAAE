@@ -181,7 +181,7 @@ namespace AssetsAdvancedEditor.Assets
                 var type0d = AssetHelper.FindTypeTreeTypeByID(file.typeTree, fixedId, scriptIndex);
                 if (type0d is {ChildrenCount: > 0})
                 {
-                    baseField.From0D(type0d, 0);
+                    baseField.From0D(type0d);
                     return baseField;
                 }
             }
@@ -255,9 +255,9 @@ namespace AssetsAdvancedEditor.Assets
                     mc.Read(scriptName, asmDef, file.header.Version);
                     var monoTemplateFields = mc.children;
 
-                    var templateField = baseTemp.children.Concat(monoTemplateFields).ToArray();
+                    var templateField = baseTemp.children.Concat(monoTemplateFields).ToList();
                     baseTemp.children = templateField;
-                    baseTemp.childrenCount = baseTemp.children.Length;
+                    baseTemp.childrenCount = baseTemp.children.Count;
 
                     mainAti = new AssetTypeInstance(baseTemp, reader, item.Position);
                 }

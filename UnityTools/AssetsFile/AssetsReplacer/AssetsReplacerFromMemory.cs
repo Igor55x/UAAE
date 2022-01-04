@@ -162,5 +162,7 @@ namespace UnityTools
 
             return writer.Position;
         }
+
+        public override void Dispose() { }
     }
 }

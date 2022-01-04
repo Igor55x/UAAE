@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace UnityTools
 {
-    public abstract class AssetsReplacer
+    public abstract class AssetsReplacer : IDisposable
     {
         public abstract AssetsReplacementType GetReplacementType();
 
@@ -25,5 +26,7 @@ namespace UnityTools
         public abstract long GetSize();
         public abstract long Write(AssetsFileWriter writer);
         public abstract long WriteReplacer(AssetsFileWriter writer);
+
+        public abstract void Dispose();
     }
 }
