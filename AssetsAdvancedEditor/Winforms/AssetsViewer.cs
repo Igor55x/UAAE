@@ -412,11 +412,8 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void CloseFiles()
         {
-            foreach (var fileInst in Workspace.LoadedFiles)
-            {
-                Am.files.Remove(fileInst);
-                fileInst.file.Close();
-            }
+            Workspace.LoadedFiles.Clear();
+            Am.UnloadAllAssetsFiles(true);
             Workspace.Modified = false;
             Close();
         }

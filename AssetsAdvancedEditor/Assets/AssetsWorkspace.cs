@@ -225,7 +225,7 @@ namespace AssetsAdvancedEditor.Assets
             var file = item.Cont.FileInstance.file;
             var reader = item.Cont.FileReader;
             var baseTemp = new AssetTypeTemplateField();
-            baseTemp.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, item.TypeID), 0);
+            baseTemp.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, item.TypeID));
             var mainAti = new AssetTypeInstance(baseTemp, reader, item.Position);
             var scriptIndex = item.MonoID;
             if (scriptIndex != 0xFFFF)
@@ -255,9 +255,7 @@ namespace AssetsAdvancedEditor.Assets
                     mc.Read(scriptName, asmDef, file.header.Version);
                     var monoTemplateFields = mc.children;
 
-                    var templateField = baseTemp.children.Concat(monoTemplateFields).ToList();
-                    baseTemp.children = templateField;
-                    baseTemp.childrenCount = baseTemp.children.Count;
+                    baseTemp.AddChildren(monoTemplateFields);
 
                     mainAti = new AssetTypeInstance(baseTemp, reader, item.Position);
                 }

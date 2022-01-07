@@ -33,24 +33,15 @@ namespace AssetsAdvancedEditor.Winforms
             var classDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, releaseClassData);
             if (File.Exists(classDataPath))
             {
-                try
-                {
-                    Am.LoadClassPackage(classDataPath);
-                    if (Am.classPackage.valid) return;
-                    MsgBoxUtils.ShowErrorDialog($"Invalid {releaseClassData} file.");
-                }
-                catch (Exception ex)
-                {
-                    MsgBoxUtils.ShowErrorDialog($"Can't load {releaseClassData}:\n" + ex);
-                }
+                Am.LoadClassPackage(classDataPath);
             }
             else
             {
                 MsgBoxUtils.ShowErrorDialog($"Missing {releaseClassData} by exe.\n" +
-                                            "Please make sure it exists.");
+                            "Please make sure it exists.");
+                Close();
+                Environment.Exit(1);
             }
-            Close();
-            Environment.Exit(1);
         }
 
         private void MenuOpen_Click(object sender, EventArgs e)
@@ -77,7 +68,7 @@ namespace AssetsAdvancedEditor.Winforms
                 }
                 case DetectedFileType.BundleFile:
                 {
-                    LoadBundle(selectedFile);
+                    LoadBundleFile(selectedFile);
                     break;
                 }
                 default:
@@ -116,17 +107,18 @@ namespace AssetsAdvancedEditor.Winforms
                 Application.Exit();
         }
 
-        private async void LoadAssetsFile(string path)
+        private void LoadAssetsFile(string path)
         {
             var fileInst = Am.LoadAssetsFile(path, true);
 
-            if (!await LoadOrAskCldb(fileInst))
+            if (!LoadOrAskCldb(fileInst))
                 return;
 
-            new AssetsViewer(Am, fileInst).ShowDialog();
+            var dialog = new AssetsViewer(Am, fileInst);
+            dialog.ShowDialog();
         }
 
-        private void LoadBundle(string path)
+        private void LoadBundleFile(string path)
         {
             BundleInst = Am.LoadBundleFile(path, false);
             Loader = new BundleLoader(BundleInst);
@@ -202,19 +194,23 @@ namespace AssetsAdvancedEditor.Winforms
             lblFileName.Text = @"No file opened.";
         }
 
-        private async Task<bool> LoadOrAskCldb(AssetsFileInstance fileInst)
+        private bool LoadOrAskCldb(AssetsFileInstance fileInst)
         {
             var unityVersion = fileInst.file.typeTree.unityVersion;
             if (Am.LoadClassDatabaseFromPackage(unityVersion) == null)
             {
                 var version = new VersionDialog(unityVersion, Am.classPackage);
-                if (await Task.Run(() => version.ShowDialog()) != DialogResult.OK)
+                if (version.ShowDialog() != DialogResult.OK)
                     return false;
 
                 if (version.SelectedCldb != null)
+                {
                     Am.classFile = version.SelectedCldb;
+                }
                 else
+                {
                     return false;
+                }
             }
             return true;
         }
@@ -316,7 +312,7 @@ namespace AssetsAdvancedEditor.Winforms
                 cboxBundleContents.SelectedIndex = 0;
         }
 
-        private async void btnInfo_Click(object sender, EventArgs e)
+        private void btnInfo_Click(object sender, EventArgs e)
         {
             if (BundleInst == null || cboxBundleContents.SelectedItem == null) return;
             var index = cboxBundleContents.SelectedIndex;
@@ -349,7 +345,7 @@ namespace AssetsAdvancedEditor.Winforms
                 var assetMemPath = Path.Combine(BundleInst.path, bunAssetName);
                 var fileInst = Am.LoadAssetsFile(assetStream, assetMemPath, true);
 
-                if (!await LoadOrAskCldb(fileInst))
+                if (!LoadOrAskCldb(fileInst))
                     return;
 
                 var info = new AssetsViewer(Am, fileInst, true);
@@ -371,10 +367,10 @@ namespace AssetsAdvancedEditor.Winforms
             if (window.ModifiedFiles.Count == 0) return;
             var bunDict = window.ModifiedFiles;
 
-            foreach (var (bunRep, assetsStream) in bunDict)
+            foreach (var (replacer, assetsStream) in bunDict)
             {
-                var fileName = bunRep.GetOriginalEntryName();
-                ModifiedFiles[fileName] = bunRep;
+                var fileName = replacer.GetOriginalEntryName();
+                ModifiedFiles[fileName] = replacer;
 
                 //replace existing assets file in the manager
                 var inst = Am.files.FirstOrDefault(i =>
