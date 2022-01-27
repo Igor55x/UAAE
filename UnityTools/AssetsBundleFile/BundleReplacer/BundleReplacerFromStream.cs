@@ -47,7 +47,7 @@ namespace UnityTools
 
         public override long Write(AssetsFileWriter writer)
         {
-            writer.BaseStream.Position = offset;
+            stream.Position = offset;
             stream.CopyToCompat(writer.BaseStream, size);
             return writer.Position;
         }

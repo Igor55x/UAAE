@@ -23,8 +23,9 @@ namespace UnityTools
         {
             get
             {
-                foreach (var valueField in Children)
+                for (var i = 0; i < Children.Count; i++)
                 {
+                    var valueField = Children[i];
                     if (valueField.TemplateField.name == name)
                     {
                         return valueField;
@@ -205,8 +206,9 @@ namespace UnityTools
                 }
                 else
                 {
-                    foreach (var child in Children)
+                    for (var i = 0; i < Children.Count; i++)
                     {
+                        var child = Children[i];
                         child.Write(writer, depth + 1);
                     }
                     if (TemplateField.align) writer.Align();

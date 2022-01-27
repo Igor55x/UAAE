@@ -185,7 +185,7 @@ namespace UnityTools
                 if (bunInst.file.IsAssetsFile(index))
                 {
                     bunInst.file.GetFileRange(index, out var offset, out var length);
-                    var ss = new SegmentStream(bunInst.stream, offset, length);
+                    var ss = new SegmentStream(bunInst.BundleStream, offset, length);
                     var assetsInst = LoadAssetsFile(ss, assetMemPath, loadDeps, bunInst: bunInst);
                     bunInst.loadedAssetsFiles.Add(assetsInst);
                     return assetsInst;

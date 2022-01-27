@@ -43,7 +43,10 @@ namespace AssetsAdvancedEditor.Assets
             MainInstance = file;
             FromBundle = fromBundle;
 
-            LoadedFiles = new List<AssetsFileInstance>();
+            LoadedFiles = new List<AssetsFileInstance>
+            {
+                file
+            };
             LoadedAssets = new List<AssetItem>();
 
             LoadedFileLookup = new Dictionary<string, AssetsFileInstance>();
@@ -100,10 +103,7 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var reader = new AssetsFileReader(previewStream)
-                {
-                    BigEndian = false
-                };
+                var reader = new AssetsFileReader(previewStream);
                 item.Position = 0L;
                 item.Cont = new AssetContainer(reader, forInstance);
                 UpdateAssetInfo(ref item, replacer);
@@ -140,6 +140,7 @@ namespace AssetsAdvancedEditor.Assets
             item.ListName = listName;
             item.Size = replacer.GetSize();
             item.Modified = "*";
+            item.SetSubItems();
         }
 
         public void MakeAssetContainer(ref AssetItem item, bool onlyInfo = false, bool forceFromCldb = false)
@@ -151,14 +152,21 @@ namespace AssetsAdvancedEditor.Assets
                 var templateField = GetTemplateField(item, forceFromCldb);
                 var typeInst = new AssetTypeInstance(templateField, cont.FileReader, item.Position);
                 cont = new AssetContainer(cont, typeInst);
+                item.Cont = cont;
             }
-            item.Cont = cont;
         }
 
         public AssetContainer GetAssetContainer(int fileId, long pathId)
         {
-            var item = LoadedAssets.FirstOrDefault(i => i.FileID == fileId && i.PathID == pathId);
-            return item?.Cont;
+            for (var i = 0; i < LoadedAssets.Count; i++)
+            {
+                var item = LoadedAssets[i];
+                if (item.FileID == fileId && item.PathID == pathId)
+                {
+                    return item?.Cont;
+                }
+            }
+            return null;
         }
 
         public AssetContainer GetAssetContainer(AssetTypeValueField pptrField)
@@ -265,17 +273,19 @@ namespace AssetsAdvancedEditor.Assets
 
         public void GenerateAssetsFileLookup()
         {
-            foreach (var fileInst in LoadedFiles)
+            for (var i = 0; i < LoadedFiles.Count; i++)
             {
+                var fileInst = LoadedFiles[i];
                 LoadedFileLookup[fileInst.path.ToLower()] = fileInst;
             }
         }
 
         public void ClearModified()
         {
-            foreach (var item in LoadedAssets)
+            Modified = false;
+            for (var i = 0; i < LoadedAssets.Count; i++)
             {
-                item.Modified = "";
+                LoadedAssets[i].ClearModified();
             }
         }
     }

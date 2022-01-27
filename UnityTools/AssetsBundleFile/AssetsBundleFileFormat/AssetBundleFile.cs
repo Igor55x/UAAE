@@ -135,7 +135,7 @@ namespace UnityTools
                     {
                         Offset = currentOffset,
                         DecompressedSize = replacer.GetSize(),
-                        Flags = 0x04,
+                        Flags = replacer.HasSerializedData() ? 4U : 0U,
                         Name = replacer.GetEntryName()
                     };
                     currentOffset += info.DecompressedSize;

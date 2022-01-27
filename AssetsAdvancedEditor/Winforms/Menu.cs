@@ -109,13 +109,18 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void LoadAssetsFile(string path)
         {
-            var fileInst = Am.LoadAssetsFile(path, true);
+            var bw = new BackgroundWorker();
+            bw.DoWork += delegate
+            {
+                var fileInst = Am.LoadAssetsFile(path, true);
 
-            if (!LoadOrAskCldb(fileInst))
-                return;
+                if (!LoadOrAskCldb(fileInst))
+                    return;
 
-            var dialog = new AssetsViewer(Am, fileInst);
-            dialog.ShowDialog();
+                using var dialog = new AssetsViewer(Am, fileInst);
+                dialog.ShowDialog();
+            };
+            bw.RunWorkerAsync();
         }
 
         private void LoadBundleFile(string path)

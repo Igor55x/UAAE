@@ -6,7 +6,7 @@ namespace UnityTools
 {
     public class AssetsFileInstance
     {
-        public Stream stream;
+        public Stream AssetsStream => file.readerPar;
         public string path;
         public string name;
         public AssetsFile file;
@@ -18,7 +18,6 @@ namespace UnityTools
 
         public AssetsFileInstance(Stream stream, string filePath, string root)
         {
-            this.stream = stream;
             path = Path.GetFullPath(filePath);
             name = Path.Combine(root, Path.GetFileName(path));
             file = new AssetsFile(new AssetsFileReader(stream));
@@ -28,7 +27,6 @@ namespace UnityTools
 
         public AssetsFileInstance(FileStream stream, string root)
         {
-            this.stream = stream;
             path = stream.Name;
             name = Path.Combine(root, Path.GetFileName(path));
             file = new AssetsFile(new AssetsFileReader(stream));

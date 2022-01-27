@@ -35,7 +35,7 @@ namespace UnityTools
             uint strTablePos = 0;
             uint defTablePos = 0;
 
-            var defaultTable = Type_0D.strTable.Split('\0');
+            var defaultTable = Type_0D.strTable.Substring(Type_0D.strTable.Length - 1).Split('\0');
             foreach (var entry in defaultTable)
             {
                 if (entry != "")

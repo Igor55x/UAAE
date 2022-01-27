@@ -54,7 +54,7 @@ namespace UnityTools
             hasValue = valueType != EnumValueTypes.None;
             childrenCount = (int)typeField.ChildrenCount;
             children = new List<AssetTypeTemplateField>(childrenCount);
-            for (int i = 0; i < childrenCount; i++)
+            for (var i = 0; i < childrenCount; i++)
             {
                 children[i] = new AssetTypeTemplateField();
                 children[i].From07(typeField.Children[i]);
@@ -227,8 +227,9 @@ namespace UnityTools
 
         public AssetTypeTemplateField SearchChild(string name)
         {
-            foreach (var child in children)
+            for (var i = 0; i < children.Count; i++)
             {
+                var child = children[i];
                 if (child.name == name)
                 {
                     return child;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 
@@ -169,10 +170,7 @@ namespace AssetsAdvancedEditor.Assets
                             var firstQuote = value.IndexOf('"');
                             var lastQuote = value.LastIndexOf('"');
                             var valueStrFix = value[(firstQuote + 1)..(lastQuote - firstQuote)];
-                            valueStrFix = valueStrFix
-                                .Replace("\\\\", "\\")
-                                .Replace("\\r", "\r")
-                                .Replace("\\n", "\n");
+                            valueStrFix = UnescapeDumpString(valueStrFix);
                             Writer.WriteCountStringInt32(valueStrFix);
                             break;
                         }
@@ -189,6 +187,39 @@ namespace AssetsAdvancedEditor.Assets
             {
                 return false;
             }
+        }
+
+        private static string UnescapeDumpString(string str)
+        {
+            var sb = new StringBuilder(str.Length);
+            var escaping = false;
+            foreach (var c in str)
+            {
+                if (!escaping && c == '\\')
+                {
+                    escaping = true;
+                    continue;
+                }
+
+                if (escaping)
+                {
+                    if (c == '\\')
+                        sb.Append('\\');
+                    else if (c == 'r')
+                        sb.Append('\r');
+                    else if (c == 'n')
+                        sb.Append('\n');
+                    else
+                        sb.Append(c);
+
+                    escaping = false;
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
 
         private void ImportXmlDumpLoop()

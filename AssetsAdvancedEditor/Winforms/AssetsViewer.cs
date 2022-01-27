@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Assets;
 using AssetsAdvancedEditor.Plugins;
@@ -74,19 +73,17 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void LoadAssetsToList()
         {
-            MainInstance.file.reader.BigEndian = false;
-            Workspace.LoadedFiles.Add(MainInstance);
             foreach (var info in MainInstance.table.Info)
             {
                 AddAssetItem(MainInstance, info);
             }
 
             var id = 1;
-            foreach (var dep in MainInstance.dependencies)
+            for (int i = 0; i < MainInstance.dependencies.Count; i++)
             {
+                var dep = MainInstance.dependencies[i];
                 if (dep != null)
                 {
-                    dep.file.reader.BigEndian = false;
                     Workspace.LoadedFiles.Add(dep);
                     foreach (var inf in dep.table.Info)
                     {
@@ -102,21 +99,33 @@ namespace AssetsAdvancedEditor.Winforms
             Extensions.GetAssetItemFast(fileId, fileInst, Workspace, info, out var item);
             item.Cont = new AssetContainer(fileInst);
             Workspace.LoadedAssets.Add(item);
-            assetList.Items.Add(new ListViewItem(item.ToArray()));
+            item.SetSubItems();
+            assetList.Items.Add(item);
         }
 
         private static bool HasName(ClassDatabaseFile cldb, ClassDatabaseType cldbType)
         {
-            return cldbType != null && cldbType.fields.Any(f => f.fieldName.GetString(cldb) == "m_Name");
+            if (cldbType == null)
+                return false;
+            for (var i = 0; i < cldbType.fields.Count; i++)
+            {
+                var field = cldbType.fields[i];
+                if (field.fieldName.GetString(cldb) == "m_Name")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        private static bool HasAnyField(ClassDatabaseType cldbType) => cldbType != null && cldbType.fields.Any();
+        private static bool HasAnyField(ClassDatabaseType cldbType) => cldbType != null && cldbType.fields.Count != 0;
 
         private void AddAssetItems(List<AssetItem> items)
         {
             var cldb = Am.classFile;
-            foreach (var item in items)
+            for (var i = 0; i < items.Count; i++)
             {
+                var item = items[i];
                 var name = item.Name;
                 var typeId = item.TypeID;
 
@@ -137,9 +146,9 @@ namespace AssetsAdvancedEditor.Winforms
                     name = "Unnamed asset";
 
                 item.ListName = name;
-                assetList.Items.Insert(0, new ListViewItem(item.ToArray()));
+                assetList.Items.Insert(0, item);
+                item.Selected = true;
                 Workspace.LoadedAssets.Insert(0, item);
-                assetList.Items[0].Selected = true;
             }
             assetList.Select();
         }
@@ -150,11 +159,13 @@ namespace AssetsAdvancedEditor.Winforms
                                                        "This will break any reference to this/these.");
             if (choice != DialogResult.Yes) return;
 
-            foreach (int index in assetList.SelectedIndices)
+            var list = assetList.SelectedIndices;
+            for (var i = 0; i < list.Count; i++)
             {
+                var index = list[i];
                 var item = Workspace.LoadedAssets[index];
                 Workspace.AddReplacer(ref item, AssetModifier.CreateAssetRemover(item));
-                assetList.Items.RemoveAt(index);
+                item.Remove();
             }
         }
 
@@ -170,12 +181,13 @@ namespace AssetsAdvancedEditor.Winforms
 
         private List<AssetItem> GetSelectedAssetItems()
         {
-            var assetItems = new List<AssetItem>();
-            foreach (int index in assetList.SelectedIndices)
+            var list = assetList.SelectedIndices;
+            var assetItems = new List<AssetItem>(list.Count);
+            for (var i = 0; i < list.Count; i++)
             {
+                var index = list[i];
                 var item = Workspace.LoadedAssets[index];
-                Workspace.MakeAssetContainer(ref item);
-                assetItems.Add(item);
+                assetItems[i] = item;
             }
             return assetItems;
         }
@@ -184,12 +196,15 @@ namespace AssetsAdvancedEditor.Winforms
         {
             try
             {
-                var fields = new List<AssetTypeValueField>();
-                foreach (var item in GetSelectedAssetItems())
+                var list = assetList.SelectedIndices;
+                var assetFields = new List<AssetTypeValueField>(list.Count);
+                for (int i = 0; i < list.Count; i++)
                 {
-                    fields.Add(Workspace.GetBaseField(item));
+                    var index = list[i];
+                    var item = Workspace.LoadedAssets[index];
+                    assetFields[i] = Workspace.GetBaseField(item);
                 }
-                return fields;
+                return assetFields;
             }
             catch
             {
@@ -199,28 +214,14 @@ namespace AssetsAdvancedEditor.Winforms
             }
         }
 
-        private void UpdateAssetInfo()
+        private void SelectModifiedAssets()
         {
-            foreach (int index in assetList.SelectedIndices)
+            var list = assetList.SelectedItems;
+            for (var i = 0; i < list.Count; i++)
             {
-                var item = Workspace.LoadedAssets[index];
-
-                assetList.Items[index] = new ListViewItem(item.ToArray())
-                {
-                    Selected = true
-                };
+                list[i].Selected = true;
             }
             assetList.Select();
-        }
-
-        private void ClearModified()
-        {
-            Workspace.Modified = false;
-            for (var i = 0; i < assetList.Items.Count; i++)
-            {
-                assetList.Items[i].SubItems[7].Text = "";
-            }
-            Workspace.ClearModified();
         }
 
         private void assetList_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -277,27 +278,24 @@ namespace AssetsAdvancedEditor.Winforms
             if (FailIfNothingSelected()) return;
             var baseFields = GetSelectedFields();
             if (baseFields == null) return;
-            var cldb = Workspace.Am.classFile;
             for (var i = 0; i < baseFields.Count; i++)
             {
                 var baseField = baseFields[i];
-                var cldbType = AssetHelper.FindAssetClassByName(cldb, baseField.GetFieldType());
+                var cldbType = AssetHelper.FindAssetClassByName(Workspace.Am.classFile, baseField.GetFieldType());
                 if (cldbType != null)
                 {
-                    if (HasAnyField(cldbType)) continue;
+                    if (HasAnyField(cldbType))
+                    {
+                        new AssetData(Workspace, baseField).Show();
+                        continue;
+                    }
                     MsgBoxUtils.ShowErrorDialog("This asset has no data to view.");
                 }
                 else
                 {
                     MsgBoxUtils.ShowErrorDialog("Unknown asset format.");
                 }
-                baseFields.RemoveAt(i);
-                i--;
             }
-
-            if (baseFields.Count == 0) return;
-            foreach (var baseField in baseFields)
-                new AssetData(Workspace, baseField).Show();
         }
 
         private void AssetsViewer_KeyDown(object sender, KeyEventArgs e)
@@ -342,7 +340,7 @@ namespace AssetsAdvancedEditor.Winforms
             if (FromBundle)
             {
                 WriteFilesInBundle();
-                ClearModified();
+                Workspace.ClearModified();
             }
             else
             {
@@ -353,7 +351,7 @@ namespace AssetsAdvancedEditor.Winforms
                     if (choice != DialogResult.Yes) return;
                 }
                 WriteFiles(overwrite);
-                ClearModified();
+                Workspace.ClearModified();
             }
         }
 
@@ -390,7 +388,7 @@ namespace AssetsAdvancedEditor.Winforms
                     }
                     using var fs = File.OpenWrite(sfd.FileName);
                     using var writer = new AssetsFileWriter(fs);
-                    fileInst.file.Write(writer, 0, replacers, 0);
+                    fileInst.file.Write(writer, 0, replacers);
                 }
             }
         }
@@ -436,8 +434,9 @@ namespace AssetsAdvancedEditor.Winforms
                 Title = "Select a folder for the raw assets"
             };
             if (fd.ShowDialog(this) != DialogResult.OK) return;
-            foreach (var item in selectedItems)
+            for (var i = 0; i < selectedItems.Count; i++)
             {
+                var item = selectedItems[i];
                 var name = Extensions.ReplaceInvalidFileNameChars(item.Name);
                 if (string.IsNullOrEmpty(name))
                 {
@@ -494,8 +493,9 @@ namespace AssetsAdvancedEditor.Winforms
                 Title = "Select a folder for the dumps"
             };
             if (fd.ShowDialog(this) != DialogResult.OK) return;
-            foreach (var item in selectedItems)
+            for (var i = 0; i < selectedItems.Count; i++)
             {
+                var item = selectedItems[i];
                 var name = Extensions.ReplaceInvalidFileNameChars(item.Name);
                 if (string.IsNullOrEmpty(name))
                 {
@@ -540,7 +540,7 @@ namespace AssetsAdvancedEditor.Winforms
                 BatchImportRaw(selectedItems);
             else
                 SingleImportRaw(selectedItems[0]);
-            UpdateAssetInfo();
+            SelectModifiedAssets();
         }
 
         private void BatchImportRaw(List<AssetItem> selectedItems)
@@ -556,8 +556,9 @@ namespace AssetsAdvancedEditor.Winforms
 
             var batchItems = dialog.batchItems;
             if (batchItems == null) return;
-            foreach (var batchItem in batchItems)
+            for (var i = 0; i < batchItems.Count; i++)
             {
+                var batchItem = batchItems[i];
                 var selectedFilePath = batchItem.ImportFile;
                 var affectedItem = batchItem.Item;
 
@@ -591,7 +592,7 @@ namespace AssetsAdvancedEditor.Winforms
 				BatchImportDump(selectedItems);
 			else
 				SingleImportDump(selectedItems[0]);
-            UpdateAssetInfo();
+            SelectModifiedAssets();
         }
 
         private void BatchImportDump(List<AssetItem> selectedItems)
@@ -607,8 +608,9 @@ namespace AssetsAdvancedEditor.Winforms
 
             var batchItems = dialog.batchItems;
             if (batchItems == null) return;
-            foreach (var batchItem in batchItems)
+            for (var i = 0; i < batchItems.Count; i++)
             {
+                var batchItem = batchItems[i];
                 var selectedFilePath = batchItem.ImportFile;
                 var affectedItem = batchItem.Item;
 
@@ -639,7 +641,7 @@ namespace AssetsAdvancedEditor.Winforms
             var items = GetSelectedAssetItems();
             var editDialog = new EditDialog(this, Workspace, items);
             editDialog.ShowDialog(this);
-            UpdateAssetInfo();
+            SelectModifiedAssets();
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -695,8 +697,10 @@ namespace AssetsAdvancedEditor.Winforms
                 if (dialog.startAtSelection)
                 {
                     var selIndices = new List<int>();
-                    foreach (int selIndex in assetList.SelectedIndices)
+                    var list = assetList.SelectedIndices;
+                    for (var i = 0; i < list.Count; i++)
                     {
+                        var selIndex = list[i];
                         assetList.Items[selIndex].Selected = false;
                         selIndices.Add(selIndex);
                     }
@@ -718,19 +722,18 @@ namespace AssetsAdvancedEditor.Winforms
             var foundResult = false;
             if (searching)
             {
-                var items = assetList.Items;
                 if (searchDown)
                 {
-                    for (var i = searchStart; i < items.Count; i++)
+                    for (var i = searchStart; i < Workspace.LoadedAssets.Count; i++)
                     {
-                        var name = items[i].SubItems[0].Text;
+                        var item = Workspace.LoadedAssets[i];
 
-                        if (!Extensions.WildcardMatches(name, searchText, searchCaseSensitive))
+                        if (!Extensions.WildcardMatches(item.Name, searchText, searchCaseSensitive))
                             continue;
 
-                        assetList.Items[i].Selected = true;
+                        item.Selected = true;
                         assetList.EnsureVisible(i);
-                        searchStart = i + 1;
+                        searchStart++;
                         foundResult = true;
                         break;
                     }
@@ -739,14 +742,14 @@ namespace AssetsAdvancedEditor.Winforms
                 {
                     for (var i = searchStart; i >= 0; i--)
                     {
-                        var name = items[i].SubItems[0].Text;
+                        var item = Workspace.LoadedAssets[i];
 
-                        if (!Extensions.WildcardMatches(name, searchText, searchCaseSensitive))
+                        if (!Extensions.WildcardMatches(item.Name, searchText, searchCaseSensitive))
                             continue;
 
-                        assetList.Items[i].Selected = true;
+                        item.Selected = true;
                         assetList.EnsureVisible(i);
-                        searchStart = i - 1;
+                        searchStart--;
                         foundResult = true;
                         break;
                     }
