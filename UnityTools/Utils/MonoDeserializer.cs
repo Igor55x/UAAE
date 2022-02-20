@@ -11,7 +11,7 @@ namespace UnityTools
         public uint format;
         public int childrenCount;
         public List<AssetTypeTemplateField> children;
-        private static Dictionary<string, AssemblyDefinition> loadedAssemblies = new Dictionary<string, AssemblyDefinition>();
+        private static readonly Dictionary<string, AssemblyDefinition> loadedAssemblies = new ();
         public void Read(string typeName, AssemblyDefinition assembly, uint format)
         {
             this.format = format;
@@ -146,7 +146,7 @@ namespace UnityTools
                 }
                 else if (DerivesFromUEObject(fieldType))
                 {
-                    SetPPtr(field, false);
+                    SetPPtr(field, true);
                 }
                 else if (fieldType.IsSerializable)
                 {
@@ -209,7 +209,7 @@ namespace UnityTools
             return validFields;
         }
 
-        private Dictionary<string, string> baseToPrimitive = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> baseToPrimitive = new ()
         {
             {"Boolean","bool"},
             {"Int64","long"},
@@ -269,7 +269,10 @@ namespace UnityTools
                 name == "UnityEngine.Rect" ||
                 name == "UnityEngine.Matrix4x4" ||
                 name == "UnityEngine.AnimationCurve" ||
-                name == "UnityEngine.GUIStyle") return true;
+                name == "UnityEngine.GUIStyle" ||
+                name == "UnityEngine.Vector2Int" ||
+                name == "UnityEngine.Vector3Int" ||
+                name == "UnityEngine.BoundsInt") return true;
             return false;
         }
 
@@ -326,7 +329,7 @@ namespace UnityTools
             {
                 name = string.Copy(field.name),
                 type = "Array",
-                valueType = EnumValueTypes.None,
+                valueType = EnumValueTypes.Array,
                 isArray = true,
                 align = true,
                 hasValue = false,
@@ -372,7 +375,7 @@ namespace UnityTools
             {
                 name = "Array",
                 type = "Array",
-                valueType = EnumValueTypes.None,
+                valueType = EnumValueTypes.Array,
                 isArray = true,
                 align = true,
                 hasValue = false,
@@ -467,6 +470,15 @@ namespace UnityTools
                     break;
                 case "GUIStyle":
                     SetGUIStyle(field);
+                    break;
+                case "BoundsInt":
+                    SetAABBInt(field);
+                    break;
+                case "Vector2Int":
+                    SetVec2Int(field);
+                    break;
+                case "Vector3Int":
+                    SetVec3Int(field);
                     break;
                 default:
                     SetSerialized(field, type);
@@ -651,6 +663,48 @@ namespace UnityTools
             };
         }
 
+        private void SetAABBInt(AssetTypeTemplateField field)
+        {
+            field.childrenCount = 2;
+            var m_Center = CreateTemplateField("m_Center", "Vector3Int", EnumValueTypes.None, 3, Vec3Int());
+            var m_Extent = CreateTemplateField("m_Extent", "Vector3Int", EnumValueTypes.None, 3, Vec3Int());
+            field.children = new List<AssetTypeTemplateField>()
+            {
+                m_Center, m_Extent
+            };
+        }
+
+        private List<AssetTypeTemplateField> Vec3Int()
+        {
+            var m_X = CreateTemplateField("m_X", "int", EnumValueTypes.Int32);
+            var m_Y = CreateTemplateField("m_Y", "int", EnumValueTypes.Int32);
+            var m_Z = CreateTemplateField("m_Z", "int", EnumValueTypes.Int32);
+            return new List<AssetTypeTemplateField>() { m_X, m_Y, m_Z };
+        }
+
+        private void SetVec2Int(AssetTypeTemplateField field)
+        {
+            field.childrenCount = 2;
+            var m_X = CreateTemplateField("m_X", "int", EnumValueTypes.Int32);
+            var m_Y = CreateTemplateField("m_Y", "int", EnumValueTypes.Int32);
+            field.children = new List<AssetTypeTemplateField>()
+            {
+                m_X, m_Y
+            };
+        }
+
+        private void SetVec3Int(AssetTypeTemplateField field)
+        {
+            field.childrenCount = 3;
+            var m_X = CreateTemplateField("m_X", "int", EnumValueTypes.Int32);
+            var m_Y = CreateTemplateField("m_Y", "int", EnumValueTypes.Int32);
+            var m_Z = CreateTemplateField("m_Z", "int", EnumValueTypes.Int32);
+            field.children = new List<AssetTypeTemplateField>()
+            {
+                m_X, m_Y, m_Z
+            };
+        }
+
         private List<AssetTypeTemplateField> String()
         {
             var size = CreateTemplateField("size", "int", EnumValueTypes.Int32);
@@ -737,7 +791,7 @@ namespace UnityTools
             if (!Enum.IsDefined(variable.GetType(), value))
             {
                 throw new ArgumentException(string.Format(
-                    "Enumeration type mismatch.  The flag is of type '{0}', was expecting '{1}'.",
+                    "Enumeration type mismatch. The flag is of type '{0}', was expecting '{1}'.",
                     value.GetType(), variable.GetType()));
             }
 

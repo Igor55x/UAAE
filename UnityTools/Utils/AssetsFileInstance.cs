@@ -40,6 +40,12 @@ namespace UnityTools
                 return dependencies[depIdx];
 
             var depPath = file.dependencies.dependencies[depIdx].assetPath;
+
+            if (depPath == string.Empty)
+            {
+                return null;
+            }
+
             var instIndex = am.files.FindIndex(f => string.Equals(Path.GetFileName(f.path), Path.GetFileName(depPath), StringComparison.CurrentCultureIgnoreCase));
             if (instIndex == -1)
             {

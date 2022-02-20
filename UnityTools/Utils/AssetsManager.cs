@@ -15,8 +15,8 @@ namespace UnityTools
         public ClassDatabaseFile classFile;
         public List<AssetsFileInstance> files;
         public List<BundleFileInstance> bundles;
-        private Dictionary<AssetClassID, AssetTypeTemplateField> templateFieldCache;
-        private Dictionary<string, AssetTypeTemplateField> monoTemplateFieldCache;
+        private readonly Dictionary<AssetClassID, AssetTypeTemplateField> templateFieldCache;
+        private readonly Dictionary<string, AssetTypeTemplateField> monoTemplateFieldCache;
 
         public AssetsManager()
         {
@@ -222,11 +222,12 @@ namespace UnityTools
                 }
             }
         }
+
         public void UpdateDependencies()
         {
-            foreach (var file in files)
+            for (var i = 0; i < files.Count; i++)
             {
-                UpdateDependencies(file);
+                UpdateDependencies(files[i]);
             }
         }
 
@@ -235,6 +236,12 @@ namespace UnityTools
             for (var i = 0; i < ofFile.dependencies.Count; i++)
             {
                 var depPath = ofFile.file.dependencies.dependencies[i].assetPath;
+
+                if (depPath == string.Empty)
+                {
+                    continue;
+                }
+
                 if (files.FindIndex(f => string.Equals(Path.GetFileName(f.path), Path.GetFileName(depPath), StringComparison.CurrentCultureIgnoreCase)) == -1)
                 {
                     var absPath = Path.Combine(path, depPath);
@@ -480,21 +487,65 @@ namespace UnityTools
                 classFile = classPackage.files[index];
                 return classFile;
             }
-
-            if (version.StartsWith("U"))
-                version = version.Substring(1);
-            foreach (var file in classPackage.files)
+            else
             {
-                foreach (var unityVersion in file.header.unityVersions)
+                var matchingFiles = new List<ClassDatabaseFile>();
+                var matchingVersions = new List<UnityVersion>();
+
+                if (version.StartsWith("U"))
+                    version = version.Substring(1);
+
+                var versionParsed = new UnityVersion(version);
+
+                for (var i = 0; i < classPackage.files.Count; i++)
                 {
-                    if (WildcardMatches(version, unityVersion))
+                    var file = classPackage.files[i];
+                    for (int j = 0; j < file.header.unityVersions.Length; j++)
                     {
-                        classFile = file;
-                        return classFile;
+                        string unityVersion = file.header.unityVersions[j];
+                        if (version == unityVersion)
+                        {
+                            classFile = file;
+                            return classFile;
+                        }
+                        else if (WildcardMatches(version, unityVersion))
+                        {
+                            string fullUnityVersion = unityVersion;
+                            if (fullUnityVersion.EndsWith("*"))
+                                fullUnityVersion = file.header.unityVersions[1 - j];
+
+                            matchingFiles.Add(file);
+                            matchingVersions.Add(new UnityVersion(fullUnityVersion));
+                        }
                     }
                 }
+
+                if (matchingFiles.Count == 1)
+                {
+                    classFile = matchingFiles[0];
+                    return classFile;
+                }
+                else if (matchingFiles.Count > 0)
+                {
+                    var selectedIndex = 0;
+                    var patchNumToMatch = versionParsed.Build;
+                    var highestMatchingPatchNum = matchingVersions[selectedIndex].Build;
+
+                    for (var i = 1; i < selectedIndex; i++)
+                    {
+                        var thisPatchNum = matchingVersions[selectedIndex].Build;
+                        if (thisPatchNum > highestMatchingPatchNum && thisPatchNum <= patchNumToMatch)
+                        {
+                            selectedIndex = i;
+                            highestMatchingPatchNum = thisPatchNum;
+                        }
+                    }
+
+                    classFile = matchingFiles[selectedIndex];
+                    return classFile;
+                }
+                return null;
             }
-            return null;
         }
 
         private bool WildcardMatches(string test, string pattern)

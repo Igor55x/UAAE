@@ -30,6 +30,7 @@
             guid.Write(writer);
             writer.Write(type);
             var assetPathTemp = assetPath;
+
             if (assetPath.EndsWith("unity_builtin_extra") ||
                 assetPath.EndsWith("unity default resources") ||
                 assetPath.EndsWith("unity editor resources")

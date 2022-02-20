@@ -109,9 +109,9 @@ namespace UnityTools
 
             typeTree.Write(writer, header.Version);
 
-            Dictionary<long, AssetFileInfo> oldAssetInfosByPathId = new Dictionary<long, AssetFileInfo>();
-            Dictionary<long, AssetsReplacer> replacersByPathId = replacers.ToDictionary(r => r.GetPathID());
-            List<AssetFileInfo> newAssetInfos = new List<AssetFileInfo>();
+            var oldAssetInfosByPathId = new Dictionary<long, AssetFileInfo>();
+            var replacersByPathId = replacers.ToDictionary(r => r.GetPathID());
+            var newAssetInfos = new List<AssetFileInfo>();
 
             // Collect unchanged assets (that aren't getting removed)
             reader.Position = AssetTablePos;

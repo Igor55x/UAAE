@@ -20,10 +20,9 @@ namespace AssetsAdvancedEditor.Assets
 
         public void SetSubItems()
         {
-            SubItems.Clear();
+            Text = ListName;
             SubItems.AddRange(new[]
             {
-                ListName,
                 Container,
                 Type,
                 ((int)TypeID).ToString(),

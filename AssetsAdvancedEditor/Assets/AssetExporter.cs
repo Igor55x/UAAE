@@ -18,8 +18,7 @@ namespace AssetsAdvancedEditor.Assets
         public void ExportRawAsset(string path, AssetItem item)
         {
             Path = path;
-            var cont = Workspace.GetAssetContainer(item.FileID, item.PathID);
-            var br = cont.FileReader;
+            var br = item.Cont.FileReader;
             br.Position = item.Position;
             var data = br.ReadBytes((int)item.Size);
             File.WriteAllBytes(path, data);
