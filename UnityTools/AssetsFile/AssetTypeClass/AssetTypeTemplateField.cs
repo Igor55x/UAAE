@@ -238,6 +238,12 @@ namespace UnityTools
             return null;
         }
 
+        public void SetChildrenList(List<AssetTypeTemplateField> children)
+        {
+            this.children = children;
+            childrenCount = children.Count;
+        }
+
         public void AddChildren(AssetTypeTemplateField children)
         {
             this.children.Add(children);

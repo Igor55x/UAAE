@@ -140,7 +140,6 @@ namespace AssetsAdvancedEditor.Assets
         {
             if (item == null || replacer == null) return;
             Extensions.GetAssetNameFast(Am.classFile, item, out _, out var listName, out var name);
-
             item.Name = name;
             item.ListName = listName;
             item.Size = replacer.GetSize();
@@ -148,26 +147,36 @@ namespace AssetsAdvancedEditor.Assets
             item.SetSubItems();
         }
 
-        public void MakeAssetContainer(ref AssetItem item, bool onlyInfo = false, bool forceFromCldb = false)
+        public void MakeAssetContainer(ref AssetItem item, bool onlyInfo = false)
         {
-            if (item == null || item.Cont == null) return;
             var cont = item.Cont;
             if (!onlyInfo && !cont.HasInstance)
             {
-                var templateField = GetTemplateField(item, forceFromCldb);
+                var templateField = GetTemplateField(item);
                 var typeInst = new AssetTypeInstance(templateField, cont.FileReader, item.Position);
                 cont = new AssetContainer(cont, typeInst);
                 item.Cont = cont;
             }
         }
 
-        public AssetItem GetAssetItem(int fileId, long pathId)
+        public AssetItem GetAssetItem(AssetID assetId, bool onlyInfo = false)
         {
-            var fileInst = LoadedFiles[fileId];
-            var assetId = new AssetID(fileInst.path, pathId);
             if (LoadedAssets.TryGetValue(assetId, out var item))
             {
+                if (!item.Cont.HasInstance)
+                    MakeAssetContainer(ref item, onlyInfo);
                 return item;
+            }
+            return null;
+        }
+
+        public AssetItem GetAssetItem(int fileId, long pathId, bool onlyInfo = false)
+        {
+            if (fileId <= LoadedFiles.Count - 1)
+            {
+                var fileInst = LoadedFiles[fileId];
+                var assetId = new AssetID(fileInst.path, pathId);
+                return GetAssetItem(assetId, onlyInfo);
             }
             return null;
         }
@@ -179,100 +188,128 @@ namespace AssetsAdvancedEditor.Assets
             return GetAssetItem(fileId, pathId);
         }
 
-        public AssetTypeTemplateField GetTemplateField(AssetItem item, bool forceFromCldb = false)
+        public AssetTypeTemplateField GetTemplateField(AssetItem item, bool deserializeMono = true)
         {
-            var file = LoadedFiles[item.FileID].file;
-            var hasTypeTree = file.typeTree.hasTypeTree;
-            var baseField = new AssetTypeTemplateField();
-            var scriptIndex = item.MonoID;
+            var cont = item.Cont;
+            var fileInst = cont.FileInstance;
+            var typeTree = fileInst.file.typeTree;
+            var hasTypeTree = typeTree.hasTypeTree;
             var fixedId = AssetHelper.FixAudioID(item.TypeID);
+            var scriptIndex = item.MonoID;
 
-            if (hasTypeTree && !forceFromCldb)
+            var baseField = new AssetTypeTemplateField();
+            if (hasTypeTree)
             {
-                var type0d = AssetHelper.FindTypeTreeTypeByID(file.typeTree, fixedId, scriptIndex);
-                if (type0d is {ChildrenCount: > 0})
-                {
+                var type0d = AssetHelper.FindTypeTreeTypeByID(typeTree, fixedId, scriptIndex);
+
+                if (type0d != null && type0d.ChildrenCount > 0)
                     baseField.From0D(type0d);
-                    return baseField;
-                }
+                else // Fallback to cldb
+                    baseField.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, fixedId));
             }
-            baseField.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, fixedId), 0);
+            else
+            {
+                if (fixedId is AssetClassID.MonoBehaviour && deserializeMono)
+                {
+                    // Check if typetree data exists already
+                    if (!hasTypeTree || AssetHelper.FindTypeTreeTypeByScriptIndex(typeTree, scriptIndex) == null)
+                    {
+                        var filePath = Path.GetDirectoryName(fileInst.parentBundle != null ? fileInst.parentBundle.path : fileInst.path);
+                        var managedPath = Path.Combine(filePath ?? Environment.CurrentDirectory, "Managed");
+                        if (Directory.Exists(managedPath))
+                        {
+                            return GetMonoTemplateField(item, managedPath);
+                        }
+                        else
+                        {
+                            var ofd = new OpenFolderDialog
+                            {
+                                Title = @"Select a folder for assemblies"
+                            };
+                            if (ofd.ShowDialog() is DialogResult.OK)
+                            {
+                                managedPath = ofd.Folder;
+                                return GetMonoTemplateField(item, managedPath);
+                            }
+                        }
+                    }
+                }
+                baseField.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, fixedId));
+            }
             return baseField;
         }
 
         public AssetTypeValueField GetBaseField(AssetItem item)
         {
-            MakeAssetContainer(ref item);
-            var cont = item.Cont;
-            var fileInst = cont.FileInstance;
-            if (item.TypeID is AssetClassID.MonoBehaviour)
-            {
-                var tt = fileInst.file.typeTree;
-                //check if typetree data exists already
-                if (!tt.hasTypeTree || AssetHelper.FindTypeTreeTypeByScriptIndex(tt, item.MonoID) == null)
-                {
-                    var filePath = Path.GetDirectoryName(fileInst.parentBundle != null ? fileInst.parentBundle.path : fileInst.path);
-                    var managedPath = Path.Combine(filePath ?? Environment.CurrentDirectory, "Managed");
-                    if (!Directory.Exists(managedPath))
-                    {
-                        var ofd = new OpenFolderDialog
-                        {
-                            Title = @"Select a folder for assemblies"
-                        };
-                        if (ofd.ShowDialog() != DialogResult.OK)
-                            return cont.TypeInstance?.GetBaseField();
+            if (!item.Cont.HasInstance)
+                MakeAssetContainer(ref item);
+            return item.Cont.TypeInstance?.GetBaseField();
+        }
 
-                        managedPath = ofd.Folder;
-                    }
-                    var monoField = GetMonoBaseField(item, managedPath);
-                    if (monoField != null)
-                        return monoField;
-                }
-            }
-            return cont.TypeInstance?.GetBaseField();
+        public AssetTypeValueField GetBaseField(int fileId, long pathId)
+        {
+            var item = GetAssetItem(fileId, pathId);
+            if (item != null)
+                return GetBaseField(item);
+            else
+                return null;
+        }
+
+        public AssetTypeValueField GetBaseField(AssetTypeValueField pptrField)
+        {
+            var item = GetAssetItem(pptrField);
+            if (item != null)
+                return GetBaseField(item);
+            else
+                return null;
         }
 
         public AssetTypeValueField GetMonoBaseField(AssetItem item, string managedPath)
         {
-            var file = item.Cont.FileInstance.file;
-            var reader = item.Cont.FileReader;
-            var baseTemp = new AssetTypeTemplateField();
-            baseTemp.FromClassDatabase(Am.classFile, AssetHelper.FindAssetClassByID(Am.classFile, item.TypeID));
-            var mainAti = new AssetTypeInstance(baseTemp, reader, item.Position);
+            var baseTemp = GetMonoTemplateField(item, managedPath);
+            return new AssetTypeInstance(baseTemp, item.Cont.FileReader, item.Position).GetBaseField();
+        }
+
+        public AssetTypeTemplateField GetMonoTemplateField(AssetItem item, string managedPath)
+        {
+            var cont = item.Cont;
+            var file = cont.FileInstance.file;
+            var baseTemp = GetTemplateField(item, false);
+
             var scriptIndex = item.MonoID;
             if (scriptIndex != 0xFFFF)
             {
-                var monoScriptCont = GetAssetItem(mainAti.GetBaseField().Get("m_Script")).Cont;
-                if (monoScriptCont == null)
-                    return null;
+                var baseField = new AssetTypeInstance(baseTemp, cont.FileReader, item.Position).GetBaseField();
 
-                var scriptBaseField = monoScriptCont.TypeInstance.GetBaseField();
-                var scriptName = scriptBaseField.Get("m_Name").GetValue().AsString();
+                var monoScriptItem = GetAssetItem(baseField.Get("m_Script"));
+                if (monoScriptItem == null)
+                    return baseTemp;
+
+                var scriptBaseField = monoScriptItem.Cont.TypeInstance.GetBaseField();
+                var scriptClassName = scriptBaseField.Get("m_ClassName").GetValue().AsString();
                 var scriptNamespace = scriptBaseField.Get("m_Namespace").GetValue().AsString();
                 var assemblyName = scriptBaseField.Get("m_AssemblyName").GetValue().AsString();
                 var assemblyPath = Path.Combine(managedPath, assemblyName);
 
                 if (scriptNamespace != string.Empty)
-                    scriptName = scriptNamespace + "." + scriptName;
+                    scriptClassName = scriptNamespace + "." + scriptClassName;
 
-                if (File.Exists(assemblyPath))
+                if (!File.Exists(assemblyPath))
+                    return baseTemp;
+
+                if (!LoadedAssemblies.ContainsKey(assemblyName))
                 {
-                    if (!LoadedAssemblies.ContainsKey(assemblyName))
-                    {
-                        LoadedAssemblies.Add(assemblyName, MonoDeserializer.GetAssemblyWithDependencies(assemblyPath));
-                    }
-                    var asmDef = LoadedAssemblies[assemblyName];
-
-                    var mc = new MonoDeserializer();
-                    mc.Read(scriptName, asmDef, file.header.Version);
-                    var monoTemplateFields = mc.children;
-
-                    baseTemp.AddChildren(monoTemplateFields);
-
-                    mainAti = new AssetTypeInstance(baseTemp, reader, item.Position);
+                    LoadedAssemblies.Add(assemblyName, MonoDeserializer.GetAssemblyWithDependencies(assemblyPath));
                 }
+                var asmDef = LoadedAssemblies[assemblyName];
+
+                var mc = new MonoDeserializer();
+                mc.Read(scriptClassName, asmDef, file.header.Version);
+                var monoTemplateFields = mc.children;
+
+                baseTemp.AddChildren(monoTemplateFields);
             }
-            return mainAti.GetBaseField();
+            return baseTemp;
         }
 
         public void GenerateAssetsFileLookup()

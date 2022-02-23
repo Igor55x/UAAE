@@ -86,7 +86,7 @@ namespace UnityTools
         /// <returns>A new string like 2019.4.3f1</returns>
         public override string ToString()
         {
-            return $"{Major}.{Minor}.{Build}{ToLiteral(Type)}{TypeNumber}";
+            return $"{Major}.{Minor}.{Build}{ToCharacter(Type)}{TypeNumber}";
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace UnityTools
         /// <param name="versionType">A Unity version type</param>
         /// <returns>The character this value represents</returns>
         /// <exception cref="ArgumentOutOfRangeException">The type is not a valid value</exception>
-        public string ToLiteral(UnityVersionType versionType)
+        public string ToCharacter(UnityVersionType versionType)
         {
             return versionType switch
             {
