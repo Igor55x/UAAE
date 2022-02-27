@@ -51,9 +51,9 @@ namespace UnityTools
                 {
                     new AssetBundleBlockInfo
                     {
-					CompressedSize = 0,
-					DecompressedSize = 0,
-					Flags = 0x40
+                        CompressedSize = 0,
+                        DecompressedSize = 0,
+                        Flags = 0x40
                     }
                 }
             };
@@ -88,29 +88,29 @@ namespace UnityTools
                     currentReplacers.Remove(replacer);
                     if (replacer.GetReplacementType() == BundleReplacementType.AddOrModify)
                     {
-					newInfo = new AssetBundleDirectoryInfo
-					{
-					    Offset = currentOffset,
-					    DecompressedSize = replacer.GetSize(),
-					    Flags = info.Flags,
-					    Name = replacer.GetEntryName()
-					};
+                        newInfo = new AssetBundleDirectoryInfo
+                        {
+                            Offset = currentOffset,
+                            DecompressedSize = replacer.GetSize(),
+                            Flags = info.Flags,
+                            Name = replacer.GetEntryName()
+                        };
                     }
                     else if (replacer.GetReplacementType() == BundleReplacementType.Rename)
                     {
-					newInfo = new AssetBundleDirectoryInfo
-					{
-					    Offset = currentOffset,
-					    DecompressedSize = info.DecompressedSize,
-					    Flags = info.Flags,
-					    Name = replacer.GetEntryName()
-					};
-					newToOriginalDirInfoLookup[newInfo] = info;
+                        newInfo = new AssetBundleDirectoryInfo
+                        {
+                            Offset = currentOffset,
+                            DecompressedSize = info.DecompressedSize,
+                            Flags = info.Flags,
+                            Name = replacer.GetEntryName()
+                        };
+                        newToOriginalDirInfoLookup[newInfo] = info;
                     }
 
                     else if (replacer.GetReplacementType() == BundleReplacementType.Remove)
                     {
-					continue;
+                        continue;
                     }
                 }
                 else
@@ -134,10 +134,10 @@ namespace UnityTools
                 {
                     var info = new AssetBundleDirectoryInfo
                     {
-					Offset = currentOffset,
-					DecompressedSize = replacer.GetSize(),
-					Flags = replacer.HasSerializedData() ? 4U : 0U,
-					Name = replacer.GetEntryName()
+                        Offset = currentOffset,
+                        DecompressedSize = replacer.GetSize(),
+                        Flags = replacer.HasSerializedData() ? 4U : 0U,
+                        Name = replacer.GetEntryName()
                     };
                     currentOffset += info.DecompressedSize;
 
@@ -162,24 +162,24 @@ namespace UnityTools
                 {
                     if (replacer.GetReplacementType() == BundleReplacementType.AddOrModify)
                     {
-					var startPos = writer.Position;
-					var endPos = replacer.Write(writer);
-					var size = endPos - startPos;
+                        var startPos = writer.Position;
+                        var endPos = replacer.Write(writer);
+                        var size = endPos - startPos;
 
-					dirInfo.DecompressedSize = size;
-					dirInfo.Offset = startPos - assetDataPos;
+                        dirInfo.DecompressedSize = size;
+                        dirInfo.Offset = startPos - assetDataPos;
                     }
                 }
                 else
                 {
                     if (newToOriginalDirInfoLookup.TryGetValue(info, out var originalInfo))
                     {
-					var startPos = writer.Position;
+                        var startPos = writer.Position;
 
-					Reader.Position = Header.GetFileDataOffset() + originalInfo.Offset;
-					Reader.BaseStream.CopyToCompat(writer.BaseStream, originalInfo.DecompressedSize);
+                        Reader.Position = Header.GetFileDataOffset() + originalInfo.Offset;
+                        Reader.BaseStream.CopyToCompat(writer.BaseStream, originalInfo.DecompressedSize);
 
-					dirInfo.Offset = startPos - assetDataPos;
+                        dirInfo.Offset = startPos - assetDataPos;
                     }
                 }
             }
@@ -223,31 +223,31 @@ namespace UnityTools
                 switch (Header.GetCompressionType())
                 {
                     case AssetBundleCompressionType.Lzma:
-					using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
-					{
-					    blocksInfoStream = SevenZipHelper.StreamDecompress(ms);
-					}
-					break;
+                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
+                    {
+                        blocksInfoStream = SevenZipHelper.StreamDecompress(ms);
+                    }
+                    break;
                     case AssetBundleCompressionType.Lz4:
                     case AssetBundleCompressionType.Lz4HC:
-					var uncompressedBytes = new byte[Header.DecompressedSize];
-					using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
-					{
-					    var decoder = new Lz4DecoderStream(ms);
-					    decoder.Read(uncompressedBytes, 0, (int)Header.DecompressedSize);
-					    decoder.Dispose();
-					}
-					blocksInfoStream = new MemoryStream(uncompressedBytes);
-					break;
+                    var uncompressedBytes = new byte[Header.DecompressedSize];
+                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
+                    {
+                        var decoder = new Lz4DecoderStream(ms);
+                        decoder.Read(uncompressedBytes, 0, (int)Header.DecompressedSize);
+                        decoder.Dispose();
+                    }
+                    blocksInfoStream = new MemoryStream(uncompressedBytes);
+                    break;
                     default:
-					blocksInfoStream = null;
-					break;
+                    blocksInfoStream = null;
+                    break;
                 }
                 if (Header.GetCompressionType() != 0)
                 {
                     using var memReader = new AssetsFileReader(blocksInfoStream)
                     {
-					Position = 0
+                        Position = 0
                     };
                     Metadata.Read(Header, memReader);
                 }
@@ -277,9 +277,9 @@ namespace UnityTools
                 {
                     newBundleInf6.BlocksInfo[i] = new AssetBundleBlockInfo
                     {
-					CompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
-					DecompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
-					Flags = (ushort)(Metadata.BlocksInfo[i].Flags & 0xC0) //set compression to none
+                        CompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
+                        DecompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
+                        Flags = (ushort)(Metadata.BlocksInfo[i].Flags & 0xC0) //set compression to none
                     };
                 }
                 newBundleInf6.DirectoryInfo = new AssetBundleDirectoryInfo[newBundleInf6.DirectoryCount];
@@ -287,10 +287,10 @@ namespace UnityTools
                 {
                     newBundleInf6.DirectoryInfo[i] = new AssetBundleDirectoryInfo
                     {
-					Offset = Metadata.DirectoryInfo[i].Offset,
-					DecompressedSize = Metadata.DirectoryInfo[i].DecompressedSize,
-					Flags = Metadata.DirectoryInfo[i].Flags,
-					Name = Metadata.DirectoryInfo[i].Name
+                        Offset = Metadata.DirectoryInfo[i].Offset,
+                        DecompressedSize = Metadata.DirectoryInfo[i].DecompressedSize,
+                        Flags = Metadata.DirectoryInfo[i].Flags,
+                        Name = Metadata.DirectoryInfo[i].Name
                     };
                 }
                 newBundleHeader6.Write(writer);
@@ -306,23 +306,23 @@ namespace UnityTools
                     var info = Metadata.BlocksInfo[i];
                     switch (info.GetCompressionType())
                     {
-					case 0:
-					    reader.BaseStream.CopyToCompat(writer.BaseStream, info.CompressedSize);
-					    break;
-					case 1:
-					    SevenZipHelper.StreamDecompress(reader.BaseStream, writer.BaseStream, info.CompressedSize, info.DecompressedSize);
-					    break;
-					case 2:
-					case 3:
-					    using (var tempMs = new MemoryStream())
-					    {
-					        reader.BaseStream.CopyToCompat(tempMs, info.CompressedSize);
-					        tempMs.Position = 0;
+                    case 0:
+                        reader.BaseStream.CopyToCompat(writer.BaseStream, info.CompressedSize);
+                        break;
+                    case 1:
+                        SevenZipHelper.StreamDecompress(reader.BaseStream, writer.BaseStream, info.CompressedSize, info.DecompressedSize);
+                        break;
+                    case 2:
+                    case 3:
+                        using (var tempMs = new MemoryStream())
+                        {
+                            reader.BaseStream.CopyToCompat(tempMs, info.CompressedSize);
+                            tempMs.Position = 0;
 
-					        using var decoder = new Lz4DecoderStream(tempMs);
-					        decoder.CopyToCompat(writer.BaseStream, info.DecompressedSize);
-					    }
-					    break;
+                            using var decoder = new Lz4DecoderStream(tempMs);
+                            decoder.CopyToCompat(writer.BaseStream, info.DecompressedSize);
+                        }
+                        break;
                     }
                 }
                 return true;
@@ -381,101 +381,101 @@ namespace UnityTools
             {
                 case AssetBundleCompressionType.Lzma:
                 {
-					Stream writeStream;
-					if (blockInfoAtEnd)
-					    writeStream = writer.BaseStream;
-					else
-					    writeStream = GetTempFileStream();
+                    Stream writeStream;
+                    if (blockInfoAtEnd)
+                        writeStream = writer.BaseStream;
+                    else
+                        writeStream = GetTempFileStream();
 
-					var writeStreamStart = writeStream.Position;
-					SevenZipHelper.Compress(bundleDataStream, writeStream);
-					var writeStreamLength = (uint)(writeStream.Position - writeStreamStart);
+                    var writeStreamStart = writeStream.Position;
+                    SevenZipHelper.Compress(bundleDataStream, writeStream);
+                    var writeStreamLength = (uint)(writeStream.Position - writeStreamStart);
 
-					var blockInfo = new AssetBundleBlockInfo
-					{
-					    CompressedSize = writeStreamLength,
-					    DecompressedSize = (uint)fileDataLength,
-					    Flags = 0x41
-					};
+                    var blockInfo = new AssetBundleBlockInfo
+                    {
+                        CompressedSize = writeStreamLength,
+                        DecompressedSize = (uint)fileDataLength,
+                        Flags = 0x41
+                    };
 
-					totalCompressedSize += blockInfo.CompressedSize;
-					newBlocks.Add(blockInfo);
+                    totalCompressedSize += blockInfo.CompressedSize;
+                    newBlocks.Add(blockInfo);
 
-					if (!blockInfoAtEnd)
-					    newStreams.Add(writeStream);
-					break;
+                    if (!blockInfoAtEnd)
+                        newStreams.Add(writeStream);
+                    break;
                 }
                 case AssetBundleCompressionType.Lz4:
                 {
-					// Compress into 0x20000 blocks
-					var bundleDataReader = new BinaryReader(bundleDataStream);
-					var uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
-					while (uncompressedBlock.Length != 0)
-					{
-					    Stream writeStream;
-					    if (blockInfoAtEnd)
-					        writeStream = writer.BaseStream;
-					    else
-					        writeStream = GetTempFileStream();
+                    // Compress into 0x20000 blocks
+                    var bundleDataReader = new BinaryReader(bundleDataStream);
+                    var uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
+                    while (uncompressedBlock.Length != 0)
+                    {
+                        Stream writeStream;
+                        if (blockInfoAtEnd)
+                            writeStream = writer.BaseStream;
+                        else
+                            writeStream = GetTempFileStream();
 
-					    var compressedBlock = LZ4Codec.Encode32HC(uncompressedBlock, 0, uncompressedBlock.Length);
+                        var compressedBlock = LZ4Codec.Encode32HC(uncompressedBlock, 0, uncompressedBlock.Length);
 
-					    if (compressedBlock.Length > uncompressedBlock.Length)
-					    {
-					        writeStream.Write(uncompressedBlock, 0, uncompressedBlock.Length);
+                        if (compressedBlock.Length > uncompressedBlock.Length)
+                        {
+                            writeStream.Write(uncompressedBlock, 0, uncompressedBlock.Length);
 
-					        var blockInfo = new AssetBundleBlockInfo
-					        {
-					            CompressedSize = (uint)uncompressedBlock.Length,
-					            DecompressedSize = (uint)uncompressedBlock.Length,
-					            Flags = 0x00
-					        };
+                            var blockInfo = new AssetBundleBlockInfo
+                            {
+                                CompressedSize = (uint)uncompressedBlock.Length,
+                                DecompressedSize = (uint)uncompressedBlock.Length,
+                                Flags = 0x00
+                            };
 
-					        totalCompressedSize += blockInfo.CompressedSize;
+                            totalCompressedSize += blockInfo.CompressedSize;
 
-					        newBlocks.Add(blockInfo);
-					    }
-					    else
-					    {
-					        writeStream.Write(compressedBlock, 0, compressedBlock.Length);
+                            newBlocks.Add(blockInfo);
+                        }
+                        else
+                        {
+                            writeStream.Write(compressedBlock, 0, compressedBlock.Length);
 
-					        var blockInfo = new AssetBundleBlockInfo
-					        {
-					            CompressedSize = (uint)compressedBlock.Length,
-					            DecompressedSize = (uint)uncompressedBlock.Length,
-					            Flags = 0x03
-					        };
+                            var blockInfo = new AssetBundleBlockInfo
+                            {
+                                CompressedSize = (uint)compressedBlock.Length,
+                                DecompressedSize = (uint)uncompressedBlock.Length,
+                                Flags = 0x03
+                            };
 
-					        totalCompressedSize += blockInfo.CompressedSize;
+                            totalCompressedSize += blockInfo.CompressedSize;
 
-					        newBlocks.Add(blockInfo);
-					    }
+                            newBlocks.Add(blockInfo);
+                        }
 
-					    if (!blockInfoAtEnd)
-					        newStreams.Add(writeStream);
+                        if (!blockInfoAtEnd)
+                            newStreams.Add(writeStream);
 
-					    uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
-					}
-					break;
+                        uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
+                    }
+                    break;
                 }
                 case AssetBundleCompressionType.None:
                 {
-					var blockInfo = new AssetBundleBlockInfo()
-					{
-					    CompressedSize = (uint)fileDataLength,
-					    DecompressedSize = (uint)fileDataLength,
-					    Flags = 0x00
-					};
+                    var blockInfo = new AssetBundleBlockInfo()
+                    {
+                        CompressedSize = (uint)fileDataLength,
+                        DecompressedSize = (uint)fileDataLength,
+                        Flags = 0x00
+                    };
 
-					totalCompressedSize += blockInfo.CompressedSize;
+                    totalCompressedSize += blockInfo.CompressedSize;
 
-					newBlocks.Add(blockInfo);
+                    newBlocks.Add(blockInfo);
 
-					if (blockInfoAtEnd)
-					    bundleDataStream.CopyToCompat(writer.BaseStream);
-					else
-					    newStreams.Add(bundleDataStream);
-					break;
+                    if (blockInfoAtEnd)
+                        bundleDataStream.CopyToCompat(writer.BaseStream);
+                    else
+                        newStreams.Add(bundleDataStream);
+                    break;
                 }
             }
 
@@ -547,7 +547,7 @@ namespace UnityTools
                     var info = dirInf[i];
                     if (info.Name == name)
                     {
-					return i;
+                        return i;
                     }
                 }
             }

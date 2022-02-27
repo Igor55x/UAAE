@@ -16,7 +16,7 @@ namespace Plugins.Texture.Options
 
         public override bool IsValidForPlugin(AssetsManager am, List<AssetItem> selectedItems)
         {
-            Description = selectedItems.Count > 1 ? "Batch export Png/Tga" : "Export Png/Tga";
+            Description = selectedItems.Count > 1 ? "Batch export textures" : "Export texture";
 
             var classId = AssetHelper.FindAssetClassByName(am.classFile, "Texture2D").classId;
 
@@ -103,24 +103,21 @@ namespace Plugins.Texture.Options
         public bool SingleExport(IWin32Window owner, AssetsWorkspace workspace, AssetItem selectedItem)
         {
             var fileInst = selectedItem.Cont.FileInstance;
-            if (!selectedItem.Cont.HasInstance)
-            {
-                selectedItem.Cont = new AssetContainer(selectedItem.Cont, TextureHelper.GetByteArrayTexture(workspace, selectedItem));
-            }
-            var texField = selectedItem.Cont.TypeInstance.GetBaseField();
+            var texField = TextureHelper.GetByteArrayTexture(workspace, selectedItem).GetBaseField();
             var texFile = TextureFile.ReadTextureFile(texField);
             var fixedName = Extensions.ReplaceInvalidFileNameChars(texFile.m_Name);
+            var fileName = Path.GetFileName(fileInst.path);
             var sfd = new SaveFileDialog
             {
                 Title = @"Save texture",
-                Filter = @"PNG file (*.png)|*.png|TGA file (*.tga)|*.tga|All types (*.*)|*.*",
-                FileName = $"{fixedName}-{Path.GetFileName(fileInst.path)}-{selectedItem.PathID}"
+                Filter = @"PNG file (*.png)|*.png|TGA file (*.tga)|*.tga|JPEG file (*.jpg)|*.jpg|All types (*.*)|*.*",
+                FileName = $"{fixedName}-{fileName}-{selectedItem.PathID}"
             };
             if (sfd.ShowDialog(owner) != DialogResult.OK)
                 return false;
 
             var file = sfd.FileName;
-            var errorAssetName = $"{Path.GetFileName(fileInst.path)}/{selectedItem.PathID}";
+            var errorAssetName = $"{fileName}/{selectedItem.PathID}";
 
             //bundle resS
             if (!TextureHelper.GetResSTexture(texFile, selectedItem))
@@ -135,7 +132,7 @@ namespace Plugins.Texture.Options
             if (data == null)
             {
                 var resSName = Path.GetFileName(texFile.m_StreamData.path);
-                MsgBoxUtils.ShowErrorDialog($"[{errorAssetName}]: resS was detected but {resSName} was not found on disk");
+                MsgBoxUtils.ShowErrorDialog(owner, $"[{errorAssetName}]: resS was detected but {resSName} was not found on disk");
                 return false;
             }
 

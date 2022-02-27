@@ -353,6 +353,9 @@ namespace AssetsAdvancedEditor.Winforms
                 if (!LoadOrAskCldb(fileInst))
                     return;
 
+                if (BundleInst != null && fileInst.parentBundle == null)
+                    fileInst.parentBundle = BundleInst;
+
                 var info = new AssetsViewer(Am, fileInst, true);
                 info.Closing += AssetsViewer_Closing;
                 info.Show();

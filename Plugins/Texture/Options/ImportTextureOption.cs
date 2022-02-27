@@ -17,7 +17,7 @@ namespace Plugins.Texture.Options
 
         public override bool IsValidForPlugin(AssetsManager am, List<AssetItem> selectedItems)
         {
-            Description = "Batch import Png/Tga";
+            Description = "Batch import textures";
 
             if (selectedItems.Count <= 1)
                 return false;

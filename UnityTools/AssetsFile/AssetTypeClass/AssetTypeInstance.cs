@@ -51,9 +51,9 @@ namespace UnityTools
 
         public void Write(AssetsFileWriter writer)
         {
-            foreach (var baseField in BaseFields)
+            for (var i = 0; i < BaseFields.Count; i++)
             {
-                baseField.Write(writer);
+                BaseFields[i].Write(writer);
             }
         }
 

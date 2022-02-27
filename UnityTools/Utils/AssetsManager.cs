@@ -55,6 +55,7 @@ namespace UnityTools
                 UpdateDependencies(instance);
             return instance;
         }
+
         public AssetsFileInstance LoadAssetsFile(FileStream stream, bool loadDeps, string root = "")
         {
             return LoadAssetsFile(stream, stream.Name, loadDeps, root);

@@ -37,13 +37,17 @@ namespace Plugins.Texture
 
             var image = Image.LoadPixelData<Rgba32>(decData, width, height);
             image.Mutate(i => i.Flip(FlipMode.Vertical));
-            if (file.EndsWith(".tga"))
+            if (file.EndsWith(".png"))
+            {
+                image.SaveAsPng(file);
+            }
+            else if (file.EndsWith(".tga"))
             {
                 image.SaveAsTga(file);
             }
             else
             {
-                image.SaveAsPng(file);
+                image.SaveAsJpeg(file);
             }
             return true;
         }
