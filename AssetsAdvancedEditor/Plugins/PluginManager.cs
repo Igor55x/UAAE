@@ -19,20 +19,26 @@ namespace AssetsAdvancedEditor.Plugins
 
         public bool LoadPluginsLibrary(string path)
         {
-            var asm = Assembly.LoadFrom(path);
-            foreach (var type in asm.GetTypes())
+            try
             {
-                if (!typeof(IPlugin).IsAssignableFrom(type)) continue;
-                var typeInst = Activator.CreateInstance(type);
-                if (typeInst == null)
-                    return false;
+                var asm = Assembly.LoadFrom(path);
+                foreach (var type in asm.GetTypes())
+                {
+                    if (!typeof(IPlugin).IsAssignableFrom(type)) continue;
+                    var typeInst = Activator.CreateInstance(type);
+                    if (typeInst == null)
+                        return false;
 
-                var plugInst = (IPlugin)typeInst;
-                var plugInf = plugInst.Init();
-                LoadedPlugins.Add(plugInf);
+                    var plugInst = (IPlugin)typeInst;
+                    var plugInf = plugInst.Init();
+                    LoadedPlugins.Add(plugInf);
+                }
                 return true;
             }
-            return false;
+            catch
+            {
+                return false;
+            }
         }
 
         public List<PluginMenuInfo> GetSupportedPlugins(List<AssetItem> selectedItems)

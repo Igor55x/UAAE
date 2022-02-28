@@ -34,14 +34,6 @@ namespace Plugins.Texture.Options
 
         public override bool ExecutePlugin(IWin32Window owner, AssetsWorkspace workspace, List<AssetItem> selectedItems)
         {
-            foreach (var item in selectedItems)
-            {
-                if (!item.Cont.HasInstance)
-                {
-                    item.Cont = new AssetContainer(item.Cont, TextureHelper.GetByteArrayTexture(workspace, item));
-                }
-            }
-
             var ofd = new OpenFolderDialog
             {
                 Title = "Select import directory"
@@ -63,7 +55,7 @@ namespace Plugins.Texture.Options
                     if (batchItem.HasMatchingFile)
                     {
                         var item = batchItem.Item;
-                        var savedAsset = item.Cont.TypeInstance.WriteToByteArray();
+                        var savedAsset = TextureHelper.GetByteArrayTexture(workspace, item).WriteToByteArray();
                         var replacer = AssetModifier.CreateAssetReplacer(batchItem.Item, savedAsset);
                         workspace.AddReplacer(ref item, replacer, new MemoryStream(savedAsset));
                     }

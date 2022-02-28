@@ -37,14 +37,6 @@ namespace Plugins.Texture.Options
 
         public bool BatchExport(IWin32Window owner, AssetsWorkspace workspace, List<AssetItem> selectedItems)
         {
-            foreach (var item in selectedItems)
-            {
-                if (!item.Cont.HasInstance)
-                {
-                    item.Cont = new AssetContainer(item.Cont, TextureHelper.GetByteArrayTexture(workspace, item));
-                }
-            }
-
             var ofd = new OpenFolderDialog
             {
                 Title = "Select export directory"
@@ -58,7 +50,7 @@ namespace Plugins.Texture.Options
             {
                 var fileInst = item.Cont.FileInstance;
                 var errorAssetName = $"{Path.GetFileName(fileInst.path)}/{item.PathID}";
-                var texBaseField = workspace.GetBaseField(item);
+                var texBaseField = TextureHelper.GetByteArrayTexture(workspace, item).GetBaseField();
                 var texFile = TextureFile.ReadTextureFile(texBaseField);
 
                 //0x0 texture, usually called like Font Texture or smth
