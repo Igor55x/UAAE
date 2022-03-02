@@ -241,6 +241,23 @@ namespace UnityTools
             return null;
         }
 
+        public static AssetFileInfoEx GetAssetInfo(this AssetsFileTable table, string name, long pathId, bool caseSensitive = true)
+        {
+            if (!caseSensitive)
+                name = name.ToLower();
+            foreach (var info in table.Info)
+            {
+                var infoName = GetAssetNameFastNative(table.File, info);
+                if (!caseSensitive)
+                    infoName = infoName.ToLower();
+                if (info.index == pathId && infoName == name)
+                {
+                    return info;
+                }
+            }
+            return null;
+        }
+
         public static List<AssetFileInfoEx> GetAssetsOfType(this AssetsFileTable table, AssetClassID typeId)
         {
             var infos = new List<AssetFileInfoEx>();

@@ -127,6 +127,8 @@ namespace AssetsAdvancedEditor.Winforms
             {
                 var item = new AssetItem
                 {
+                    Name = "",
+                    Container = "",
                     Type = type,
                     TypeID = typeId,
                     FileID = fileId,

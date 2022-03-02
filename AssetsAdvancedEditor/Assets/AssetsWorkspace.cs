@@ -23,9 +23,6 @@ namespace AssetsAdvancedEditor.Assets
         public Dictionary<string, AssetsFileInstance> LoadedFileLookup { get; }
         public Dictionary<string, AssemblyDefinition> LoadedAssemblies { get; }
 
-        public AssetImporter Importer { get; }
-        public AssetExporter Exporter { get; }
-
         public Dictionary<int, List<AssetsReplacer>> NewReplacers { get; }
         public Dictionary<AssetID, AssetsReplacer> NewAssets { get; }
         public Dictionary<AssetID, Stream> NewAssetDatas { get; }
@@ -51,9 +48,6 @@ namespace AssetsAdvancedEditor.Assets
 
             LoadedFileLookup = new Dictionary<string, AssetsFileInstance>();
             LoadedAssemblies = new Dictionary<string, AssemblyDefinition>();
-
-            Importer = new AssetImporter(this);
-            Exporter = new AssetExporter(this);
 
             NewReplacers = new Dictionary<int, List<AssetsReplacer>>();
             NewAssets = new Dictionary<AssetID, AssetsReplacer>();

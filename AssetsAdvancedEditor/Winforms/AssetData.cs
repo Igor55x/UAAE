@@ -8,13 +8,11 @@ namespace AssetsAdvancedEditor.Winforms
 {
     public partial class AssetData : Form
     {
-        public AssetsWorkspace Workspace;
         public AssetTypeValueField BaseField;
         public string TempPath;
-        public AssetData(AssetsWorkspace workspace, AssetTypeValueField baseField)
+        public AssetData(AssetTypeValueField baseField)
         {
             InitializeComponent();
-            Workspace = workspace;
             BaseField = baseField;
             PopulateTree();
             LoadDump();
@@ -22,8 +20,9 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void PopulateTree()
         {
-            rawViewTree.Nodes.Add(BaseField.GetFieldType() + " " + BaseField.GetName());
-            RecursiveTreeLoad(BaseField, rawViewTree.Nodes[0]);
+            var baseItemNode = new TreeNode($"{BaseField.GetFieldType()} {BaseField.GetName()}");
+            rawViewTree.Nodes.Add(baseItemNode);
+            RecursiveTreeLoad(BaseField, baseItemNode);
         }
 
         private static void RecursiveTreeLoad(AssetTypeValueField assetField, TreeNode node)
@@ -41,26 +40,33 @@ namespace AssetsAdvancedEditor.Winforms
                     {
                         quote = "\"";
                     }
-                    if (1 <= (int)evt && (int)evt <= 12)
+                    if ((int)evt >= 1 && (int)evt <= 12)
                     {
                         value = $" = {quote}{children.GetValue().AsString()}{quote}";
                     }
-                    var isOneItem = children.ChildrenCount == 1;
-                    if (evt is EnumValueTypes.Array or EnumValueTypes.ByteArray)
+                    if (evt is EnumValueTypes.Array)
                     {
+                        var isOneItem = children.ChildrenCount == 1;
                         value = $" ({children.ChildrenCount} {(isOneItem ? "item" : "items")})";
+                    }
+                    else if (evt is EnumValueTypes.ByteArray)
+                    {
+                        var size = children.GetValue().AsByteArray().size;
+                        var isOneItem = size == 1;
+                        value = $" ({size} {(isOneItem ? "item" : "items")})";
                     }
                 }
 
-                node.Nodes.Add($"{children.GetFieldType()} {children.GetName() + value}");
-                RecursiveTreeLoad(children, node.LastNode);
+                var childNode = new TreeNode($"{children.GetFieldType()} {children.GetName() + value}");
+                node.Nodes.Add(childNode);
+                RecursiveTreeLoad(children, childNode);
             }
         }
 
         private void LoadDump()
         {
             var filePath = Path.GetTempFileName();
-            new AssetExporter(Workspace).ExportDump(filePath, BaseField, DumpType.TXT);
+            new AssetExporter().ExportDump(filePath, BaseField, DumpType.TXT);
             TempPath = filePath;
             boxDumpView.Lines = File.ReadAllLines(filePath);
         }

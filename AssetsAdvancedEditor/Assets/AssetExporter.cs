@@ -8,12 +8,9 @@ namespace AssetsAdvancedEditor.Assets
 {
     public class AssetExporter
     {
-        public AssetsWorkspace Workspace;
-        public StreamWriter Writer;
-        public string Path;
-        public XmlDocument Doc;
-
-        public AssetExporter(AssetsWorkspace workspace) => Workspace = workspace;
+        private StreamWriter Writer;
+        private string Path;
+        private XmlDocument Doc;
 
         public void ExportRawAsset(string path, AssetItem item)
         {
@@ -22,11 +19,6 @@ namespace AssetsAdvancedEditor.Assets
             br.Position = item.Position;
             var data = br.ReadBytes((int)item.Size);
             File.WriteAllBytes(path, data);
-        }
-
-        public void ExportDump(string path, AssetItem item, DumpType dumpType)
-        {
-            ExportDump(path, Workspace.GetBaseField(item), dumpType);
         }
 
         public void ExportDump(string path, AssetTypeValueField field, DumpType dumpType)
@@ -91,13 +83,32 @@ namespace AssetsAdvancedEditor.Assets
                 var sizeAlign = sizeTemplate.align ? "1" : "0";
                 var sizeTypeName = sizeTemplate.type;
                 var sizeFieldName = sizeTemplate.name;
-                var size = field.GetValue().AsArray().size;
-                Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName} ({size} {(size != 1 ? "items" : "item")})");
-                Writer.WriteLine($"{new string(' ', depth + 1)}{sizeAlign} {sizeTypeName} {sizeFieldName} = {size}");
-                for (var i = 0; i < field.ChildrenCount; i++)
+                if (template.valueType is EnumValueTypes.Array)
                 {
-                    Writer.WriteLine($"{new string(' ', depth + 1)}[{i}]");
-                    RecurseTextDump(field.Children[i], depth + 2);
+                    var size = field.GetValue().AsArray().size;
+                    var isOneItem = size == 1;
+                    Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName} ({size} {(isOneItem ? "item" : "items")})");
+                    Writer.WriteLine($"{new string(' ', depth + 1)}{sizeAlign} {sizeTypeName} {sizeFieldName} = {size}");
+                    for (var i = 0; i < field.ChildrenCount; i++)
+                    {
+                        Writer.WriteLine($"{new string(' ', depth + 1)}[{i}]");
+                        RecurseTextDump(field.Children[i], depth + 2);
+                    }
+                }
+                else if (template.valueType is EnumValueTypes.ByteArray)
+                {
+                    var byteArray = field.GetValue().AsByteArray();
+                    var data = byteArray.data;
+                    var size = (int)byteArray.size;
+                    var isOneItem = size == 1;
+
+                    Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName} ({size} {(isOneItem ? "item" : "items")})");
+                    Writer.WriteLine($"{new string(' ', depth + 1)}{sizeAlign} {sizeTypeName} {sizeFieldName} = {size}");
+                    for (var i = 0; i < size; i++)
+                    {
+                        Writer.WriteLine($"{new string(' ', depth + 1)}[{i}]");
+                        Writer.WriteLine($"{new string(' ', depth + 2)}0 UInt8 data = {data[i]}");
+                    }
                 }
             }
             else

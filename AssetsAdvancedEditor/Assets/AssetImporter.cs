@@ -7,21 +7,18 @@ using UnityTools;
 
 namespace AssetsAdvancedEditor.Assets
 {
-    public class AssetImporter
+    public static class AssetImporter
     {
-        public AssetsWorkspace Workspace;
-        public StreamReader Reader;
-        public AssetsFileWriter Writer;
-        public string Path;
+        private static StreamReader Reader;
+        private static AssetsFileWriter Writer;
+        private static string Path;
 
-        public AssetImporter(AssetsWorkspace workspace) => Workspace = workspace;
-
-        public AssetsReplacer ImportRawAsset(string path, AssetItem item)
+        public static AssetsReplacer ImportRawAsset(string path, AssetItem item)
         {
             return AssetModifier.CreateAssetReplacer(item, File.ReadAllBytes(path));
         }
 
-        public AssetsReplacer ImportDump(string path, AssetItem item, DumpType dumpType)
+        public static AssetsReplacer ImportDump(string path, AssetItem item, DumpType dumpType)
         {
             Path = path;
             using var ms = new MemoryStream();
@@ -38,16 +35,16 @@ namespace AssetsAdvancedEditor.Assets
                         using var fs = File.OpenRead(path);
                         using var reader = new StreamReader(fs);
                         Reader = reader;
-                        ImportTxtDumpLoop();
+                        ImportTextDump();
                         break;
                     }
                     case DumpType.XML:
                     {
-                        ImportXmlDumpLoop();
+                        ImportXmlDump();
                         break;
                     }
                     case DumpType.JSON:
-                        ImportJsonDumpLoop();
+                        ImportJsonDump();
                         break;
                     default:
                         return null;
@@ -61,18 +58,11 @@ namespace AssetsAdvancedEditor.Assets
             return AssetModifier.CreateAssetReplacer(item, ms.ToArray());
         }
 
-        private void ImportTxtDumpLoop()
+        private static void ImportTextDump()
         {
-            var error = "";
-            var cldb = Workspace.Am.classFile;
             var alignStack = new Stack<bool>();
-
             var line = Reader.ReadLine();
-            var assetType = line?[2..line.LastIndexOf(' ')];
-            var cldbType = AssetHelper.FindAssetClassByName(cldb, assetType);
-
-            if (cldbType == null)
-                error += $"Invalid or unknown asset type: \"{assetType}\"\n";
+            var error = "";
 
             while (true)
             {
@@ -103,9 +93,12 @@ namespace AssetsAdvancedEditor.Assets
                 if (eqSign != -1)
                 {
                     var type = line[typeName..];
-                    type = type.StartsWith("unsigned") ?
-                        type.Split()[0] + ' ' + type.Split()[1] : 
-                        type.Split()[0];
+                    type = type.Split()[0];
+
+                    if (type.StartsWith("unsigned"))
+                    {
+                        type = $"unsigned {type.Split()[1]}";
+                    }
 
                     var success = WriteData(type, valueStr);
 
@@ -125,7 +118,7 @@ namespace AssetsAdvancedEditor.Assets
                 throw new Exception(error);
         }
 
-        private bool WriteData(string type, string value)
+        private static bool WriteData(string type, string value)
         {
             try
             {
@@ -222,12 +215,12 @@ namespace AssetsAdvancedEditor.Assets
             return sb.ToString();
         }
 
-        private void ImportXmlDumpLoop()
+        private static void ImportXmlDump()
         {
             // todo
         }
 
-        private void ImportJsonDumpLoop()
+        private static void ImportJsonDump()
         {
             // todo
         }

@@ -18,9 +18,6 @@ namespace AssetsAdvancedEditor.Winforms
         public AssetsFileInstance MainInstance { get; }
         public bool FromBundle { get; }
 
-        public AssetImporter Importer { get; }
-        public AssetExporter Exporter { get; }
-
         public string AssetsFileName { get; }
         public string AssetsRootDir { get; }
         public string UnityVersion { get; }
@@ -53,9 +50,6 @@ namespace AssetsAdvancedEditor.Winforms
             Pm = Workspace.Pm;
             MainInstance = Workspace.MainInstance;
             FromBundle = Workspace.FromBundle;
-
-            Importer = Workspace.Importer;
-            Exporter = Workspace.Exporter;
 
             AssetsFileName = Workspace.AssetsFileName;
             AssetsRootDir = Workspace.AssetsRootDir;
@@ -150,6 +144,7 @@ namespace AssetsAdvancedEditor.Winforms
                     name = "Unnamed asset";
 
                 item.ListName = name;
+                item.SetSubItems();
                 assetList.Items.Insert(0, item);
                 item.Selected = true;
             }
@@ -229,6 +224,7 @@ namespace AssetsAdvancedEditor.Winforms
             if (Workspace.LoadedAssets.Count != assetList.Items.Count) return;  // shouldn't happen
             var details = (AssetItem)assetList.Items[e.ItemIndex];
             var name = details.Name;
+            var typeId = (int)details.TypeID;
             var cldb = Am.classFile;
             var cldbType = AssetHelper.FindAssetClassByID(cldb, details.TypeID);
             if (!HasName(cldb, cldbType))
@@ -242,26 +238,8 @@ namespace AssetsAdvancedEditor.Winforms
             boxName.Text = name;
             boxPathID.Text = details.PathID.ToString();
             boxFileID.Text = details.FileID.ToString();
-            var typeId = (int)details.TypeID;
-            if (details.TypeID != AssetClassID.MonoBehaviour)
-            {
-                if (Enum.TryParse(details.Type, out AssetClassID classId))
-                {
-                    boxType.Text = details.TypeID == classId
-                        ? $@"0x{typeId:X8}"
-                        : $@"0x{typeId:X8} ({details.Type})";
-                }
-                else
-                {
-                    boxType.Text = $@"0x{typeId:X8} ({details.Type})";
-                }
-            }
-            else
-            {
-                boxType.Text = details.MonoID != ushort.MaxValue ?
-                    $@"0x{details.MonoID:X8} ({details.Type})" :
-                    $@"0x{typeId:X8} ({details.Type})";
-            }
+            boxType.Text = $@"0x{typeId:X8} ({details.Type})";
+            boxMonoID.Text = $@"0x{ushort.MaxValue:X8}";
         }
 
         private void assetList_SelectedIndexChanged(object sender, EventArgs e)
@@ -271,6 +249,7 @@ namespace AssetsAdvancedEditor.Winforms
             boxPathID.Text = "";
             boxFileID.Text = "";
             boxType.Text = "";
+            boxMonoID.Text = "";
         }
 
         private void btnViewData_Click(object sender, EventArgs e)
@@ -286,7 +265,7 @@ namespace AssetsAdvancedEditor.Winforms
                 {
                     if (HasAnyField(cldbType))
                     {
-                        new AssetData(Workspace, baseField).Show();
+                        new AssetData(baseField).Show();
                         continue;
                     }
                     MsgBoxUtils.ShowErrorDialog("This asset has no data to view.");
@@ -445,7 +424,7 @@ namespace AssetsAdvancedEditor.Winforms
 
                 var fileName = $"{name}-{item.Cont.FileInstance.name}-{item.PathID}-{item.Type}.dat";
                 var path = Path.Combine(fd.Folder, fileName);
-                Exporter.ExportRawAsset(path, item);
+                new AssetExporter().ExportRawAsset(path, item);
             }
         }
 
@@ -463,7 +442,7 @@ namespace AssetsAdvancedEditor.Winforms
                 FileName = $"{name}-{selectedItem.Cont.FileInstance.name}-{selectedItem.PathID}"
             };
             if (sfd.ShowDialog() != DialogResult.OK) return;
-            Exporter.ExportRawAsset(sfd.FileName, selectedItem);
+            new AssetExporter().ExportRawAsset(sfd.FileName, selectedItem);
         }
 
         private void btnExportDump_Click(object sender, EventArgs e)
@@ -504,7 +483,7 @@ namespace AssetsAdvancedEditor.Winforms
 
                 var fileName = $"{name}-{item.Cont.FileInstance.name}-{item.PathID}-{item.Type}{ext}";
                 var path = Path.Combine(fd.Folder, fileName);
-                Exporter.ExportDump(path, item, dumpType);
+                new AssetExporter().ExportDump(path, Workspace.GetBaseField(item), dumpType);
             }
         }
 
@@ -528,7 +507,7 @@ namespace AssetsAdvancedEditor.Winforms
                 2 => DumpType.XML,
                 _ => DumpType.TXT
             };
-            Exporter.ExportDump(sfd.FileName, selectedItem, dumpType);
+            new AssetExporter().ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
         }
 
         private void btnImportRaw_Click(object sender, EventArgs e)
@@ -563,8 +542,8 @@ namespace AssetsAdvancedEditor.Winforms
                 var affectedItem = batchItem.Item;
 
                 var replacer = selectedFilePath.EndsWith(".dat") ?
-                    Importer.ImportRawAsset(selectedFilePath, affectedItem) :
-                    Importer.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
+                    AssetImporter.ImportRawAsset(selectedFilePath, affectedItem) :
+                    AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
 
                 Workspace.AddReplacer(ref affectedItem, replacer);
             }
@@ -579,7 +558,7 @@ namespace AssetsAdvancedEditor.Winforms
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
 
-            var replacer = Importer.ImportRawAsset(ofd.FileName, selectedItem);
+            var replacer = AssetImporter.ImportRawAsset(ofd.FileName, selectedItem);
             Workspace.AddReplacer(ref selectedItem, replacer);
         }
 
@@ -615,8 +594,8 @@ namespace AssetsAdvancedEditor.Winforms
                 var affectedItem = batchItem.Item;
 
                 var replacer = selectedFilePath.EndsWith(".dat") ?
-                    Importer.ImportRawAsset(selectedFilePath, affectedItem) :
-                    Importer.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
+                    AssetImporter.ImportRawAsset(selectedFilePath, affectedItem) :
+                    AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
 
                 Workspace.AddReplacer(ref affectedItem, replacer);
             }
@@ -631,7 +610,7 @@ namespace AssetsAdvancedEditor.Winforms
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
 
-            var replacer = Importer.ImportDump(ofd.FileName, selectedItem, DumpType.TXT);
+            var replacer = AssetImporter.ImportDump(ofd.FileName, selectedItem, DumpType.TXT);
             Workspace.AddReplacer(ref selectedItem, replacer);
         }
 

@@ -92,15 +92,24 @@ var table = inst.table;
 var inf1 = table.GetAssetInfo("RocketShip");
 //if there are multiple assets by the same name, you can use type to narrow it down
 var inf2 = table.GetAssetInfo("RocketShip", AssetClassID.GameObject);
-//if you want to get an asset by id (not recommended since they change over versions)
+//if you want to get an asset by pathId (not recommended since they change over versions)
 var inf3 = table.GetAssetInfo(428);
+//if you want to get an asset by name and pathId
+var inf4 = table.GetAssetInfo("RocketShip", 428);
 ```
 
-If you want to load all asset infos, loop over `inst.table.assetFileInfo`.
+You can also do a case-insensitive name search.
 
 ```cs
 var table = inst.table;
-foreach (var inf in table.assetFileInfo)
+var inf1 = table.GetAssetInfo("RocketShip", false);
+```
+
+If you want to load all asset infos, loop over `inst.table.Info`.
+
+```cs
+var table = inst.table;
+foreach (var inf in table.Info)
 {
     //...
 }

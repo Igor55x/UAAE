@@ -48,7 +48,7 @@ namespace UnityTools
             }
             else
             {
-                reader.BaseStream.Position += AssetFileInfo.GetSize(header.Version) * AssetCount;
+                reader.BaseStream.Position += assetInfoSize * AssetCount;
             }
             if (header.Version > 0x0B)
             {
@@ -62,7 +62,7 @@ namespace UnityTools
         
         public void Close() => readerPar.Dispose();
 
-        public void Write(AssetsFileWriter writer, long filePos, List<AssetsReplacer> replacers, uint fileID = 0, ClassDatabaseFile typeMeta = null)
+        public void Write(AssetsFileWriter writer, long filePos, List<AssetsReplacer> replacers, ClassDatabaseFile typeMeta = null)
         {
             if (filePos == -1)
                 filePos = writer.Position;
@@ -260,18 +260,24 @@ namespace UnityTools
         public static bool IsAssetsFile(string filePath)
         {
             using var reader = new AssetsFileReader(filePath);
-            return IsAssetsFile(reader, 0, reader.BaseStream.Length);
+            return IsAssetsFile(reader, 0);
         }
 
-        public static bool IsAssetsFile(AssetsFileReader reader, long offset, long length)
+        public static bool IsAssetsFile(AssetsFileReader reader, long offset = 0L)
         {
+            var length = reader.BaseStream.Length;
             //todo - not fully implemented
             if (length < 0x30)
                 return false;
 
             reader.Position = offset;
-            var possibleBundleHeader = reader.ReadStringLength(5);
-            if (possibleBundleHeader == "Unity")
+            var possibleHeader = reader.ReadStringLength(5);
+            if (possibleHeader == "Unity" || possibleHeader.StartsWith("MZ") || possibleHeader.StartsWith("FSB5"))
+                return false;
+
+            reader.Position = offset;
+            var metadataSize = reader.ReadUInt32();
+            if (metadataSize < 8)
                 return false;
 
             reader.Position = offset + 0x08;
@@ -288,7 +294,7 @@ namespace UnityTools
 
             var possibleVersion = "";
             char curChar;
-            while (reader.Position < reader.BaseStream.Length && (curChar = (char)reader.ReadByte()) != 0x00)
+            while (reader.Position < length && (curChar = (char)reader.ReadByte()) != 0x00)
             {
                 possibleVersion += curChar;
                 if (possibleVersion.Length > 0xFF)

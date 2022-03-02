@@ -76,6 +76,8 @@
             this.pathIDColumn = new System.Windows.Forms.ColumnHeader();
             this.sizeColumn = new System.Windows.Forms.ColumnHeader();
             this.modifiedColumn = new System.Windows.Forms.ColumnHeader();
+            this.boxMonoID = new System.Windows.Forms.TextBox();
+            this.lblMonoID = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -180,7 +182,7 @@
             // btnViewData
             // 
             this.btnViewData.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnViewData.Location = new System.Drawing.Point(759, 230);
+            this.btnViewData.Location = new System.Drawing.Point(759, 272);
             this.btnViewData.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnViewData.Name = "btnViewData";
             this.btnViewData.Size = new System.Drawing.Size(212, 27);
@@ -192,7 +194,7 @@
             // btnExportRaw
             // 
             this.btnExportRaw.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExportRaw.Location = new System.Drawing.Point(759, 306);
+            this.btnExportRaw.Location = new System.Drawing.Point(759, 336);
             this.btnExportRaw.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnExportRaw.Name = "btnExportRaw";
             this.btnExportRaw.Size = new System.Drawing.Size(212, 27);
@@ -204,7 +206,7 @@
             // btnExportDump
             // 
             this.btnExportDump.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExportDump.Location = new System.Drawing.Point(759, 344);
+            this.btnExportDump.Location = new System.Drawing.Point(759, 368);
             this.btnExportDump.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnExportDump.Name = "btnExportDump";
             this.btnExportDump.Size = new System.Drawing.Size(212, 27);
@@ -216,7 +218,7 @@
             // btnImportRaw
             // 
             this.btnImportRaw.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImportRaw.Location = new System.Drawing.Point(759, 382);
+            this.btnImportRaw.Location = new System.Drawing.Point(759, 400);
             this.btnImportRaw.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnImportRaw.Name = "btnImportRaw";
             this.btnImportRaw.Size = new System.Drawing.Size(212, 27);
@@ -228,7 +230,7 @@
             // btnImportDump
             // 
             this.btnImportDump.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImportDump.Location = new System.Drawing.Point(759, 420);
+            this.btnImportDump.Location = new System.Drawing.Point(759, 432);
             this.btnImportDump.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnImportDump.Name = "btnImportDump";
             this.btnImportDump.Size = new System.Drawing.Size(212, 27);
@@ -240,7 +242,7 @@
             // btnEdit
             // 
             this.btnEdit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEdit.Location = new System.Drawing.Point(759, 268);
+            this.btnEdit.Location = new System.Drawing.Point(759, 304);
             this.btnEdit.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnEdit.Name = "btnEdit";
             this.btnEdit.Size = new System.Drawing.Size(212, 27);
@@ -264,7 +266,7 @@
             // btnAdd
             // 
             this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.Location = new System.Drawing.Point(759, 458);
+            this.btnAdd.Location = new System.Drawing.Point(759, 464);
             this.btnAdd.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(212, 27);
@@ -301,14 +303,14 @@
             // MenuSave
             // 
             this.MenuSave.Name = "MenuSave";
-            this.MenuSave.Size = new System.Drawing.Size(180, 22);
+            this.MenuSave.Size = new System.Drawing.Size(135, 22);
             this.MenuSave.Text = "Save";
             this.MenuSave.Click += new System.EventHandler(this.MenuSave_Click);
             // 
             // MenuSaveAs
             // 
             this.MenuSaveAs.Name = "MenuSaveAs";
-            this.MenuSaveAs.Size = new System.Drawing.Size(180, 22);
+            this.MenuSaveAs.Size = new System.Drawing.Size(135, 22);
             this.MenuSaveAs.Text = "Save as...";
             this.MenuSaveAs.Click += new System.EventHandler(this.MenuSaveAs_Click);
             // 
@@ -318,7 +320,7 @@
             this.MenuCreateStandaloneexeInstaller,
             this.MenuCreateInstallerPackageFile});
             this.MenuModMaker.Name = "MenuModMaker";
-            this.MenuModMaker.Size = new System.Drawing.Size(180, 22);
+            this.MenuModMaker.Size = new System.Drawing.Size(135, 22);
             this.MenuModMaker.Text = "Mod Maker";
             // 
             // MenuCreateStandaloneexeInstaller
@@ -338,7 +340,7 @@
             // MenuClose
             // 
             this.MenuClose.Name = "MenuClose";
-            this.MenuClose.Size = new System.Drawing.Size(180, 22);
+            this.MenuClose.Size = new System.Drawing.Size(135, 22);
             this.MenuClose.Text = "Close";
             this.MenuClose.Click += new System.EventHandler(this.MenuClose_Click);
             // 
@@ -507,12 +509,36 @@
             // 
             this.modifiedColumn.Text = "Modified";
             // 
+            // boxMonoID
+            // 
+            this.boxMonoID.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.boxMonoID.BackColor = System.Drawing.SystemColors.Window;
+            this.boxMonoID.Location = new System.Drawing.Point(760, 245);
+            this.boxMonoID.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.boxMonoID.Name = "boxMonoID";
+            this.boxMonoID.ReadOnly = true;
+            this.boxMonoID.Size = new System.Drawing.Size(210, 23);
+            this.boxMonoID.TabIndex = 21;
+            // 
+            // lblMonoID
+            // 
+            this.lblMonoID.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblMonoID.AutoSize = true;
+            this.lblMonoID.Location = new System.Drawing.Point(757, 226);
+            this.lblMonoID.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lblMonoID.Name = "lblMonoID";
+            this.lblMonoID.Size = new System.Drawing.Size(53, 15);
+            this.lblMonoID.TabIndex = 20;
+            this.lblMonoID.Text = "Mono ID";
+            // 
             // AssetsViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.ClientSize = new System.Drawing.Size(985, 537);
+            this.Controls.Add(this.boxMonoID);
+            this.Controls.Add(this.lblMonoID);
             this.Controls.Add(this.assetList);
             this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.btnRemove);
@@ -595,5 +621,7 @@
         private System.Windows.Forms.ToolStripMenuItem MenuTools;
         private System.Windows.Forms.ToolStripMenuItem MenuGetScriptInformation;
         private System.Windows.Forms.ColumnHeader containerColumn;
+        private System.Windows.Forms.TextBox boxMonoID;
+        private System.Windows.Forms.Label lblMonoID;
     }
 }
