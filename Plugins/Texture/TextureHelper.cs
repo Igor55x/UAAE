@@ -1,6 +1,5 @@
 ﻿using AssetsAdvancedEditor.Assets;
 using System.IO;
-using System.Linq;
 using UnityTools;
 
 namespace Plugins.Texture

@@ -58,7 +58,7 @@ namespace UnityTools
             // which will make it look like the start of the new assets file is at position 0
             var alignedStream = new SegmentStream(writer.BaseStream, writer.Position);
             var alignedWriter = new AssetsFileWriter(alignedStream);
-            assetsFile.Write(alignedWriter, -1, replacers, fileId, typeMeta);
+            assetsFile.Write(alignedWriter, replacers, -1, typeMeta);
             writer.Position = writer.BaseStream.Length;
             return writer.Position;
         }

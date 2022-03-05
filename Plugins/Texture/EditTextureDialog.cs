@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Image = SixLabors.ImageSharp.Image;
+using System.Runtime.CompilerServices;
 
 namespace Plugins.Texture
 {
@@ -56,9 +56,8 @@ namespace Plugins.Texture
                 tex.m_Height = image.Height;
 
                 image.Mutate(i => i.Flip(FlipMode.Vertical));
-                imgBytes = image.TryGetSinglePixelSpan(out var pixelSpan)
-                    ? MemoryMarshal.AsBytes(pixelSpan).ToArray()
-                    : null;
+                var imgBytes = new byte[tex.m_Width * tex.m_Height * Unsafe.SizeOf<Rgba32>()];
+                image.CopyPixelDataTo(imgBytes);
                 if (imgBytes == null)
                 {
                     MsgBoxUtils.ShowErrorDialog(this, "Failed to parse current texture.");

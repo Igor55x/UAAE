@@ -345,7 +345,7 @@ namespace AssetsAdvancedEditor.Winforms
                     var tempPath = Path.Combine(Path.GetTempPath(), fileInst.name);
                     using var fs = File.OpenWrite(tempPath);
                     using var writer = new AssetsFileWriter(fs);
-                    fileInst.file.Write(writer, 0, replacers, 0);
+                    fileInst.file.Write(writer, replacers, 0);
                     Am.UnloadAssetsFile(path);
                     fs.Close();
                     File.Replace(tempPath, path, path + ".backup");
@@ -367,7 +367,7 @@ namespace AssetsAdvancedEditor.Winforms
                     }
                     using var fs = File.OpenWrite(sfd.FileName);
                     using var writer = new AssetsFileWriter(fs);
-                    fileInst.file.Write(writer, 0, replacers);
+                    fileInst.file.Write(writer, replacers, 0);
                 }
             }
         }
@@ -381,7 +381,7 @@ namespace AssetsAdvancedEditor.Winforms
                 var writer = new AssetsFileWriter(ms);
                 var fileInst = Workspace.LoadedFiles[fileId];
 
-                fileInst.file.Write(writer, 0, replacers);
+                fileInst.file.Write(writer, replacers, 0);
                 ms.Seek(0, SeekOrigin.Begin);
                 ModifiedFiles.Add(AssetModifier.CreateBundleReplacer(fileInst.name, true, ms.ToArray()), ms);
             }

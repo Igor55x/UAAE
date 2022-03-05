@@ -1,9 +1,9 @@
-﻿using System.Runtime.InteropServices;
-using UnityTools;
+﻿using UnityTools;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Size = System.Drawing.Size;
+using System.Runtime.CompilerServices;
 
 namespace Plugins.Texture
 {
@@ -11,16 +11,13 @@ namespace Plugins.Texture
     {
         public static byte[] ImportTexture(string file, TextureFormat format, out Size imgSize)
         {
-            byte[] decData;
             using var image = Image.Load<Rgba32>(file);
             imgSize = new Size(image.Width, image.Height);
+            var decData = new byte[image.Width * image.Height * Unsafe.SizeOf<Rgba32>()];
 
             image.Mutate(i => i.Flip(FlipMode.Vertical));
-            if (image.TryGetSinglePixelSpan(out var pixelSpan))
-            {
-                decData = MemoryMarshal.AsBytes(pixelSpan).ToArray();
-            }
-            else
+            image.CopyPixelDataTo(decData);
+            if (decData == null)
             {
                 return null; //rip
             }

@@ -62,7 +62,7 @@ namespace UnityTools
         
         public void Close() => readerPar.Dispose();
 
-        public void Write(AssetsFileWriter writer, long filePos, List<AssetsReplacer> replacers, ClassDatabaseFile typeMeta = null)
+        public void Write(AssetsFileWriter writer, List<AssetsReplacer> replacers, long filePos, ClassDatabaseFile typeMeta = null)
         {
             if (filePos == -1)
                 filePos = writer.Position;
@@ -260,12 +260,11 @@ namespace UnityTools
         public static bool IsAssetsFile(string filePath)
         {
             using var reader = new AssetsFileReader(filePath);
-            return IsAssetsFile(reader, 0);
+            return IsAssetsFile(reader, 0, reader.BaseStream.Length);
         }
 
-        public static bool IsAssetsFile(AssetsFileReader reader, long offset = 0L)
+        public static bool IsAssetsFile(AssetsFileReader reader, long offset, long length)
         {
-            var length = reader.BaseStream.Length;
             //todo - not fully implemented
             if (length < 0x30)
                 return false;
@@ -294,7 +293,7 @@ namespace UnityTools
 
             var possibleVersion = "";
             char curChar;
-            while (reader.Position < length && (curChar = (char)reader.ReadByte()) != 0x00)
+            while (reader.Position < reader.BaseStream.Length && (curChar = (char)reader.ReadByte()) != 0x00)
             {
                 possibleVersion += curChar;
                 if (possibleVersion.Length > 0xFF)
