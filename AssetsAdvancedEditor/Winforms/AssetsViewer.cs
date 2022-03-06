@@ -424,7 +424,7 @@ namespace AssetsAdvancedEditor.Winforms
 
                 var fileName = $"{name}-{item.Cont.FileInstance.name}-{item.PathID}-{item.Type}.dat";
                 var path = Path.Combine(fd.Folder, fileName);
-                new AssetExporter().ExportRawAsset(path, item);
+                AssetExporter.ExportRawAsset(path, item);
             }
         }
 
@@ -442,7 +442,7 @@ namespace AssetsAdvancedEditor.Winforms
                 FileName = $"{name}-{selectedItem.Cont.FileInstance.name}-{selectedItem.PathID}"
             };
             if (sfd.ShowDialog() != DialogResult.OK) return;
-            new AssetExporter().ExportRawAsset(sfd.FileName, selectedItem);
+            AssetExporter.ExportRawAsset(sfd.FileName, selectedItem);
         }
 
         private void btnExportDump_Click(object sender, EventArgs e)
@@ -483,7 +483,7 @@ namespace AssetsAdvancedEditor.Winforms
 
                 var fileName = $"{name}-{item.Cont.FileInstance.name}-{item.PathID}-{item.Type}{ext}";
                 var path = Path.Combine(fd.Folder, fileName);
-                new AssetExporter().ExportDump(path, Workspace.GetBaseField(item), dumpType);
+                AssetExporter.ExportDump(path, Workspace.GetBaseField(item), dumpType);
             }
         }
 
@@ -507,7 +507,7 @@ namespace AssetsAdvancedEditor.Winforms
                 2 => DumpType.XML,
                 _ => DumpType.TXT
             };
-            new AssetExporter().ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
+            AssetExporter.ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
         }
 
         private void btnImportRaw_Click(object sender, EventArgs e)

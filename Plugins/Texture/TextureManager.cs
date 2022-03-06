@@ -1,9 +1,9 @@
-﻿using UnityTools;
+﻿using System.Runtime.CompilerServices;
+using UnityTools;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Size = System.Drawing.Size;
-using System.Runtime.CompilerServices;
 
 namespace Plugins.Texture
 {

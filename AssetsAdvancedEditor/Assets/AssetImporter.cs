@@ -11,7 +11,6 @@ namespace AssetsAdvancedEditor.Assets
     {
         private static StreamReader Reader;
         private static AssetsFileWriter Writer;
-        private static string Path;
 
         public static AssetsReplacer ImportRawAsset(string path, AssetItem item)
         {
@@ -20,7 +19,6 @@ namespace AssetsAdvancedEditor.Assets
 
         public static AssetsReplacer ImportDump(string path, AssetItem item, DumpType dumpType)
         {
-            Path = path;
             using var ms = new MemoryStream();
             Writer = new AssetsFileWriter(ms)
             {
@@ -61,12 +59,11 @@ namespace AssetsAdvancedEditor.Assets
         private static void ImportTextDump()
         {
             var alignStack = new Stack<bool>();
-            var line = Reader.ReadLine();
             var error = "";
 
             while (true)
             {
-                line = Reader.ReadLine();
+                var line = Reader.ReadLine();
                 if (line == null) break;
 
                 var thisDepth = 0;

@@ -6,24 +6,21 @@ using UnityTools;
 
 namespace AssetsAdvancedEditor.Assets
 {
-    public class AssetExporter
+    public static class AssetExporter
     {
-        private StreamWriter Writer;
-        private string Path;
-        private XmlDocument Doc;
+        private static StreamWriter Writer;
+        private static XmlDocument Doc;
 
-        public void ExportRawAsset(string path, AssetItem item)
+        public static void ExportRawAsset(string path, AssetItem item)
         {
-            Path = path;
             var br = item.Cont.FileReader;
             br.Position = item.Position;
             var data = br.ReadBytes((int)item.Size);
             File.WriteAllBytes(path, data);
         }
 
-        public void ExportDump(string path, AssetTypeValueField field, DumpType dumpType)
+        public static void ExportDump(string path, AssetTypeValueField field, DumpType dumpType)
         {
-            Path = path;
             try
             {
                 switch (dumpType)
@@ -41,7 +38,7 @@ namespace AssetsAdvancedEditor.Assets
                         Doc = new XmlDocument();
                         var result = RecurseXmlDump(field);
                         Doc.AppendChild(result);
-                        Doc.Save(Path);
+                        Doc.Save(path);
                         break;
                     }
                     case DumpType.JSON:
@@ -57,24 +54,26 @@ namespace AssetsAdvancedEditor.Assets
             }
         }
 
-        private void RecurseTextDump(AssetTypeValueField field, int depth = 0)
+        private static void RecurseTextDump(AssetTypeValueField field, int depth = 0)
         {
             var template = field.TemplateField;
             var align = template.align ? "1" : "0";
             var typeName = template.type;
             var fieldName = template.name;
             var isArray = template.isArray;
+            var value = field.GetValue();
+            var valueType = template.valueType;
 
             //string's field isn't aligned but its array is
-            if (template.valueType == EnumValueTypes.String)
+            if (valueType is EnumValueTypes.String)
                 align = "1";
 
             //mainly to handle enum fields not having the int type name
-            if (template.valueType != EnumValueTypes.None &&
-                template.valueType != EnumValueTypes.Array &&
-                template.valueType != EnumValueTypes.ByteArray)
+            if (valueType != EnumValueTypes.None &&
+                valueType != EnumValueTypes.Array &&
+                valueType != EnumValueTypes.ByteArray)
             {
-                typeName = CorrectTypeName(template.valueType);
+                typeName = CorrectTypeName(valueType);
             }
 
             if (isArray)
@@ -83,9 +82,9 @@ namespace AssetsAdvancedEditor.Assets
                 var sizeAlign = sizeTemplate.align ? "1" : "0";
                 var sizeTypeName = sizeTemplate.type;
                 var sizeFieldName = sizeTemplate.name;
-                if (template.valueType is EnumValueTypes.Array)
+                if (valueType != EnumValueTypes.ByteArray)
                 {
-                    var size = field.GetValue().AsArray().size;
+                    var size = value.AsArray().size;
                     var isOneItem = size == 1;
                     Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName} ({size} {(isOneItem ? "item" : "items")})");
                     Writer.WriteLine($"{new string(' ', depth + 1)}{sizeAlign} {sizeTypeName} {sizeFieldName} = {size}");
@@ -95,9 +94,9 @@ namespace AssetsAdvancedEditor.Assets
                         RecurseTextDump(field.Children[i], depth + 2);
                     }
                 }
-                else if (template.valueType is EnumValueTypes.ByteArray)
+                else
                 {
-                    var byteArray = field.GetValue().AsByteArray();
+                    var byteArray = value.AsByteArray();
                     var data = byteArray.data;
                     var size = (int)byteArray.size;
                     var isOneItem = size == 1;
@@ -113,26 +112,26 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var value = "";
-                if (field.GetValue() != null)
+                var valueStr = "";
+                if (value != null)
                 {
-                    var evt = field.GetValue().GetValueType();
+                    var evt = value.GetValueType();
                     if (evt == EnumValueTypes.String)
                     {
                         //only replace \ with \\ but not " with \" lol
                         //you just have to find the last "
-                        var fixedStr = field.GetValue().AsString()
+                        var fixedStr = value.AsString()
                             .Replace("\\", "\\\\")
                             .Replace("\r", "\\r")
                             .Replace("\n", "\\n");
-                        value = $" = \"{fixedStr}\"";
+                        valueStr = $" = \"{fixedStr}\"";
                     }
                     else if (1 <= (int)evt && (int)evt <= 12)
                     {
-                        value = $" = {field.GetValue().AsString()}";
+                        valueStr = $" = {value.AsString()}";
                     }
                 }
-                Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName}{value}");
+                Writer.WriteLine($"{new string(' ', depth)}{align} {typeName} {fieldName}{valueStr}");
 
                 for (var i = 0; i < field.ChildrenCount; i++)
                 {
@@ -161,7 +160,7 @@ namespace AssetsAdvancedEditor.Assets
             };
         }
 
-        private XmlNode RecurseXmlDump(AssetTypeValueField field)
+        private static XmlNode RecurseXmlDump(AssetTypeValueField field)
         {
             var template = field.TemplateField;
             var align = template.align ? "True" : "False";
@@ -181,28 +180,29 @@ namespace AssetsAdvancedEditor.Assets
                 typeName = template.valueType.ToString();
             }
 
-            var hasValue = field.GetValue() != null;
-            var nodeName = hasValue ? field.GetValue().GetValueType().ToString() : "Object";
+            var value = field.GetValue();
+            var hasValue = value != null;
+            var nodeName = hasValue ? value.GetValueType().ToString() : "Object";
             var e = Doc.CreateElement(isArray ? "Array" : nodeName);
             e.SetAttribute("align", align);
 
             if (!hasValue)
             {
-                e.SetAttribute("typeName", typeName);
+                e.SetAttribute("Type", typeName);
             }
-            e.SetAttribute("fieldName", fieldName);
+            e.SetAttribute("Name", fieldName);
 
             if (isArray)
             {
                 var sizeTemplate = template.children[0];
                 var sizeAlign = sizeTemplate.align ? "True" : "False";
-                var sizeTypeName = sizeTemplate.type;
-                var sizeFieldName = sizeTemplate.name;
-                var size = field.GetValue().AsArray().size;
-                e.SetAttribute("size", size.ToString());
-                e.SetAttribute("sizeAlign", sizeAlign);
-                e.SetAttribute("sizeTypeName", sizeTypeName);
-                e.SetAttribute("sizeFieldName", sizeFieldName);
+                var sizeType = sizeTemplate.type;
+                var sizeName = sizeTemplate.name;
+                var size = value.AsArray().size;
+                e.SetAttribute("Size", size.ToString());
+                e.SetAttribute("Align", sizeAlign);
+                e.SetAttribute("Type", sizeType);
+                e.SetAttribute("Name", sizeName);
                 for (var i = 0; i < field.ChildrenCount; i++)
                 {
                     var result = RecurseXmlDump(field.Children[i]);
@@ -211,25 +211,25 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var value = "";
-                if (field.GetValue() != null)
+                var valueStr = "";
+                if (value != null)
                 {
-                    var evt = field.GetValue().GetValueType();
-                    if (evt == EnumValueTypes.String)
+                    var evt = value.GetValueType();
+                    if (evt is EnumValueTypes.String)
                     {
                         //only replace \ with \\ but not " with \" lol
                         //you just have to find the last "
-                        var fixedStr = field.GetValue().AsString()
+                        var fixedStr = value.AsString()
                             .Replace("\\", "\\\\")
                             .Replace("\r", "\\r")
                             .Replace("\n", "\\n");
-                        value = fixedStr;
+                        valueStr = fixedStr;
                     }
                     else if (1 <= (int)evt && (int)evt <= 12)
                     {
-                        value = field.GetValue().AsString();
+                        valueStr = value.AsString();
                     }
-                    var text = Doc.CreateTextNode(value);
+                    var text = Doc.CreateTextNode(valueStr);
                     e.AppendChild(text);
                 }
 
@@ -242,7 +242,7 @@ namespace AssetsAdvancedEditor.Assets
             return e;
         }
 
-        private void RecurseJsonDump()
+        private static void RecurseJsonDump()
         {
             // todo
         }

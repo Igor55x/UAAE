@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Image = SixLabors.ImageSharp.Image;
-using System.Runtime.CompilerServices;
 
 namespace Plugins.Texture
 {

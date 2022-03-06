@@ -31,10 +31,11 @@ namespace AssetsAdvancedEditor.Winforms
             foreach (var children in assetField.Children)
             {
                 if (children == null) return;
-                var value = "";
-                if (children.GetValue() != null)
+                var value = children.GetValue();
+                var valueStr = "";
+                if (value != null)
                 {
-                    var evt = children.GetValue().GetValueType();
+                    var evt = value.GetValueType();
                     var quote = "";
                     if (evt == EnumValueTypes.String)
                     {
@@ -42,22 +43,22 @@ namespace AssetsAdvancedEditor.Winforms
                     }
                     if ((int)evt >= 1 && (int)evt <= 12)
                     {
-                        value = $" = {quote}{children.GetValue().AsString()}{quote}";
+                        valueStr = $" = {quote}{value.AsString()}{quote}";
                     }
                     if (evt is EnumValueTypes.Array)
                     {
                         var isOneItem = children.ChildrenCount == 1;
-                        value = $" ({children.ChildrenCount} {(isOneItem ? "item" : "items")})";
+                        valueStr = $" ({children.ChildrenCount} {(isOneItem ? "item" : "items")})";
                     }
                     else if (evt is EnumValueTypes.ByteArray)
                     {
-                        var size = children.GetValue().AsByteArray().size;
+                        var size = value.AsByteArray().size;
                         var isOneItem = size == 1;
-                        value = $" ({size} {(isOneItem ? "item" : "items")})";
+                        valueStr = $" ({size} {(isOneItem ? "item" : "items")})";
                     }
                 }
 
-                var childNode = new TreeNode($"{children.GetFieldType()} {children.GetName() + value}");
+                var childNode = new TreeNode($"{children.GetFieldType()} {children.GetName() + valueStr}");
                 node.Nodes.Add(childNode);
                 RecursiveTreeLoad(children, childNode);
             }
@@ -66,7 +67,7 @@ namespace AssetsAdvancedEditor.Winforms
         private void LoadDump()
         {
             var filePath = Path.GetTempFileName();
-            new AssetExporter().ExportDump(filePath, BaseField, DumpType.TXT);
+            AssetExporter.ExportDump(filePath, BaseField, DumpType.TXT);
             TempPath = filePath;
             boxDumpView.Lines = File.ReadAllLines(filePath);
         }
