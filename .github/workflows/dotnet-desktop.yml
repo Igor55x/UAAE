@@ -31,4 +31,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: UAAE-Windows
-        path: AssetsAdvancedEditor/bin/Release/net5.0-windows
+        path: AssetsAdvancedEditor/bin/Release/net6.0-windows
