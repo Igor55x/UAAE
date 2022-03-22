@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Xml;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
@@ -8,6 +10,7 @@ namespace AssetsAdvancedEditor.Assets
 {
     public static class AssetExporter
     {
+        private static Utf8JsonWriter JWriter;
         private static StreamWriter Writer;
         private static XmlDocument Doc;
 
@@ -26,24 +29,36 @@ namespace AssetsAdvancedEditor.Assets
                 switch (dumpType)
                 {
                     case DumpType.TXT:
-                    {
-                        using var fs = File.OpenWrite(path);
-                        using var writer = new StreamWriter(fs);
-                        Writer = writer;
-                        RecurseTextDump(field);
-                        break;
-                    }
+                        {
+                            using var fs = File.OpenWrite(path);
+                            using var writer = new StreamWriter(fs);
+                            Writer = writer;
+                            RecurseTextDump(field);
+                            break;
+                        }
                     case DumpType.XML:
-                    {
-                        Doc = new XmlDocument();
-                        var result = RecurseXmlDump(field);
-                        Doc.AppendChild(result);
-                        Doc.Save(path);
-                        break;
-                    }
+                        {
+                            Doc = new XmlDocument();
+                            var result = RecurseXmlDump(field);
+                            Doc.AppendChild(result);
+                            Doc.Save(path);
+                            break;
+                        }
                     case DumpType.JSON:
-                        RecurseJsonDump();
-                        break;
+                        {
+                            using var fs = File.OpenWrite(path);
+                            var options = new JsonWriterOptions
+                            {
+                                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                                Indented = true
+                            };
+                            using var writer = new Utf8JsonWriter(fs, options);
+                            JWriter = writer;
+                            JWriter.WriteStartObject();
+                            RecurseJsonDump(field);
+                            JWriter.WriteEndObject();
+                            break;
+                        }
                     default:
                         return;
                 }
@@ -64,11 +79,11 @@ namespace AssetsAdvancedEditor.Assets
             var value = field.GetValue();
             var valueType = template.valueType;
 
-            //string's field isn't aligned but its array is
+            // String's field isn't aligned but its array is
             if (valueType is EnumValueTypes.String)
                 align = "1";
 
-            //mainly to handle enum fields not having the int type name
+            // Mainly to handle enum fields not having the int type name
             if (valueType != EnumValueTypes.None &&
                 valueType != EnumValueTypes.Array &&
                 valueType != EnumValueTypes.ByteArray)
@@ -118,8 +133,8 @@ namespace AssetsAdvancedEditor.Assets
                     var evt = value.GetValueType();
                     if (evt == EnumValueTypes.String)
                     {
-                        //only replace \ with \\ but not " with \" lol
-                        //you just have to find the last "
+                        // Only replace \ with \\ but not " with \" lol
+                        // you just have to find the last "
                         var fixedStr = value.AsString()
                             .Replace("\\", "\\\\")
                             .Replace("\r", "\\r")
@@ -168,11 +183,11 @@ namespace AssetsAdvancedEditor.Assets
             var fieldName = template.name;
             var isArray = template.isArray;
 
-            //string's field isn't aligned but its array is
+            // String's field isn't aligned but its array is
             if (template.valueType == EnumValueTypes.String)
                 align = "True";
 
-            //mainly to handle enum fields not having the int type name
+            // Mainly to handle enum fields not having the int type name
             if (template.valueType != EnumValueTypes.None &&
                 template.valueType != EnumValueTypes.Array &&
                 template.valueType != EnumValueTypes.ByteArray)
@@ -242,9 +257,104 @@ namespace AssetsAdvancedEditor.Assets
             return e;
         }
 
-        private static void RecurseJsonDump()
+        private static void RecurseJsonDump(AssetTypeValueField field)
         {
-            // todo
+            var template = field.TemplateField;
+            var align = template.align ? "1" : "0";
+            var typeName = template.type;
+            var fieldName = template.name;
+            var isArray = template.isArray;
+            var value = field.GetValue();
+            var valueType = template.valueType;
+
+            // String's field isn't aligned but its array is
+            if (valueType is EnumValueTypes.String)
+                align = "1";
+
+            // Mainly to handle enum fields not having the int type name
+            if (valueType != EnumValueTypes.None &&
+                valueType != EnumValueTypes.Array &&
+                valueType != EnumValueTypes.ByteArray)
+            {
+                typeName = CorrectTypeName(valueType);
+            }
+
+            var propertyName = $"{align} {typeName} {fieldName}";
+
+            if (isArray)
+            {
+                JWriter.WriteStartArray(propertyName);
+                if (valueType != EnumValueTypes.ByteArray)
+                {
+                    for (var i = 0; i < field.ChildrenCount; i++)
+                    {
+                        JWriter.WriteStartObject();
+                        RecurseJsonDump(field.Children[i]);
+                        JWriter.WriteEndObject();
+                    }
+                }
+                else
+                {
+                    var byteArrayData = value.AsByteArray().data;
+                    for (var i = 0; i < byteArrayData.Length; i++)
+                    {
+                        JWriter.WriteNumberValue(byteArrayData[i]);
+                    }
+                }
+                JWriter.WriteEndArray();
+            }
+            else
+            {
+                if (value != null)
+                {
+                    var evt = value.GetValueType();
+
+                    JWriter.WritePropertyName(propertyName);
+                    switch (evt)
+                    {
+                        case EnumValueTypes.Bool:
+                            JWriter.WriteBooleanValue(value.AsBool());
+                            break;
+                        case EnumValueTypes.Int8:
+                        case EnumValueTypes.Int16:
+                        case EnumValueTypes.Int32:
+                            JWriter.WriteNumberValue(value.AsInt());
+                            break;
+                        case EnumValueTypes.Int64:
+                            JWriter.WriteNumberValue(value.AsInt64());
+                            break;
+                        case EnumValueTypes.UInt8:
+                        case EnumValueTypes.UInt16:
+                        case EnumValueTypes.UInt32:
+                            JWriter.WriteNumberValue(value.AsUInt());
+                            break;
+                        case EnumValueTypes.UInt64:
+                            JWriter.WriteNumberValue(value.AsUInt64());
+                            break;
+                        case EnumValueTypes.String:
+                            JWriter.WriteStringValue(value.AsString());
+                            break;
+                        case EnumValueTypes.Float:
+                            JWriter.WriteNumberValue(value.AsFloat());
+                            break;
+                        case EnumValueTypes.Double:
+                            JWriter.WriteNumberValue(value.AsDouble());
+                            break;
+                        default:
+                            JWriter.WriteStringValue("invalid value");
+                            break;
+                    }
+                }
+                else
+                {
+                    JWriter.WriteStartObject(propertyName);
+                    for (var i = 0; i < field.ChildrenCount; i++)
+                    {
+                        RecurseJsonDump(field.Children[i]);
+                    }
+                    JWriter.WriteEndObject();
+                }
+            }
         }
     }
 }

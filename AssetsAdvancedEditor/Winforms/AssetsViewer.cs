@@ -464,6 +464,7 @@ namespace AssetsAdvancedEditor.Winforms
             var ext = dumpType switch
             {
                 DumpType.TXT => ".txt",
+                DumpType.JSON => ".json",
                 DumpType.XML => ".xml",
                 _ => ".txt"
             };
@@ -497,14 +498,15 @@ namespace AssetsAdvancedEditor.Winforms
             var sfd = new SaveFileDialog
             {
                 Title = @"Save dump",
-                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE xml dump (*.xml)|*.xml",
+                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json|UAAE xml dump (*.xml)|*.xml",
                 FileName = $"{name}-{selectedItem.Cont.FileInstance.name}-{selectedItem.PathID}-{selectedItem.Type}"
             };
             if (sfd.ShowDialog() != DialogResult.OK) return;
             var dumpType = sfd.FilterIndex switch
             {
                 1 => DumpType.TXT,
-                2 => DumpType.XML,
+                2 => DumpType.JSON,
+                3 => DumpType.XML,
                 _ => DumpType.TXT
             };
             AssetExporter.ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
@@ -593,9 +595,19 @@ namespace AssetsAdvancedEditor.Winforms
                 var selectedFilePath = batchItem.ImportFile;
                 var affectedItem = batchItem.Item;
 
-                var replacer = selectedFilePath.EndsWith(".dat") ?
-                    AssetImporter.ImportRawAsset(selectedFilePath, affectedItem) :
-                    AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
+                AssetsReplacer replacer;
+                if (selectedFilePath.EndsWith(".txt"))
+                {
+                    replacer = AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
+                }
+                else if (selectedFilePath.EndsWith(".json"))
+                {
+                    replacer = AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.JSON);
+                }
+                else
+                {
+                    replacer = AssetImporter.ImportRawAsset(selectedFilePath, affectedItem);
+                }
 
                 Workspace.AddReplacer(ref affectedItem, replacer);
             }
@@ -606,11 +618,17 @@ namespace AssetsAdvancedEditor.Winforms
             var ofd = new OpenFileDialog
             {
                 Title = @"Import dump",
-                Filter = @"UAAE text dump (*.txt)|*.txt" // UAAE xml dump (*.xml)|*.xml
+                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json" // UAAE xml dump (*.xml)|*.xml
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
-
-            var replacer = AssetImporter.ImportDump(ofd.FileName, selectedItem, DumpType.TXT);
+            var dumpType = ofd.FilterIndex switch
+            {
+                1 => DumpType.TXT,
+                2 => DumpType.JSON,
+                //3 => DumpType.XML,
+                _ => DumpType.TXT
+            };
+            var replacer = AssetImporter.ImportDump(ofd.FileName, selectedItem, dumpType);
             Workspace.AddReplacer(ref selectedItem, replacer);
         }
 

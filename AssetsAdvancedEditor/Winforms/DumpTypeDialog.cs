@@ -21,7 +21,7 @@ namespace AssetsAdvancedEditor.Winforms
             else if (rbtnXML.Checked)
                 dumpType = DumpType.XML;
             else if (rbtnJSON.Checked)
-                dumpType = DumpType.TXT; // todo
+                dumpType = DumpType.JSON;
             else
             {
                 MsgBoxUtils.ShowErrorDialog("You didn't choose any dump type!\n" +

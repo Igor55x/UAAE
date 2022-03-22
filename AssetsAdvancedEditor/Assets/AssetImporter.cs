@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Text.Json;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 
@@ -29,21 +31,26 @@ namespace AssetsAdvancedEditor.Assets
                 switch (dumpType)
                 {
                     case DumpType.TXT:
-                    {
-                        using var fs = File.OpenRead(path);
-                        using var reader = new StreamReader(fs);
-                        Reader = reader;
-                        ImportTextDump();
-                        break;
-                    }
+                        {
+                            using var fs = File.OpenRead(path);
+                            using var reader = new StreamReader(fs);
+                            Reader = reader;
+                            ImportTextDump();
+                            break;
+                        }
                     case DumpType.XML:
-                    {
-                        ImportXmlDump();
-                        break;
-                    }
+                        {
+                            ImportXmlDump();
+                            break;
+                        }
                     case DumpType.JSON:
-                        ImportJsonDump();
-                        break;
+                        {
+                            using var fs = File.OpenRead(path);
+                            using var reader = new StreamReader(fs);
+                            Reader = reader;
+                            ImportJsonDump();
+                            break;
+                        }
                     default:
                         return null;
                 }
@@ -59,7 +66,7 @@ namespace AssetsAdvancedEditor.Assets
         private static void ImportTextDump()
         {
             var alignStack = new Stack<bool>();
-            var error = "";
+            var error = new StringBuilder();
 
             while (true)
             {
@@ -100,7 +107,7 @@ namespace AssetsAdvancedEditor.Assets
                     var success = WriteData(type, valueStr);
 
                     if (!success)
-                        error += $"An error occurred while writing the value \"{valueStr}\" of type \"{type}\".\n";
+                        error.Append(string.Format("An error occurred while writing the value \"{0}\" of type \"{1}\".\n", valueStr, type));
 
                     if (align)
                         Writer.Align();
@@ -111,16 +118,21 @@ namespace AssetsAdvancedEditor.Assets
                 }
             }
 
-            if (error != "")
-                throw new Exception(error);
+            if (error.Length != 0)
+                throw new Exception(error.ToString());
         }
 
         private static bool WriteData(string type, string value)
         {
+            var evt = AssetTypeValueField.GetValueTypeByTypeName(type);
+            return WriteData(evt, value);
+        }
+        
+        private static bool WriteData(EnumValueTypes evt, string value)
+        {
             try
             {
-                var valueType = AssetTypeValueField.GetValueTypeByTypeName(type);
-                switch (valueType)
+                switch (evt)
                 {
                     case EnumValueTypes.Bool:
                         Writer.Write(bool.Parse(value));
@@ -159,7 +171,11 @@ namespace AssetsAdvancedEditor.Assets
                         {
                             var firstQuote = value.IndexOf('"');
                             var lastQuote = value.LastIndexOf('"');
-                            var valueStrFix = value[(firstQuote + 1)..(lastQuote - firstQuote)];
+                            var valueStrFix = value;
+                            if (firstQuote != -1 && lastQuote != -1)
+                            {
+                                valueStrFix = value[(firstQuote + 1)..(lastQuote - firstQuote)];
+                            }
                             valueStrFix = UnescapeDumpString(valueStrFix);
                             Writer.WriteCountStringInt32(valueStrFix);
                             break;
@@ -219,7 +235,82 @@ namespace AssetsAdvancedEditor.Assets
 
         private static void ImportJsonDump()
         {
-            // todo
+            var json = Reader.ReadToEnd();
+            var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var rootProperty = root.EnumerateObject().First();
+            RecurseJsonDump(rootProperty);
+        }
+
+        private static void RecurseJsonDump(JsonProperty rootProperty)
+        {
+            var error = new StringBuilder();
+
+            var splitName = rootProperty.Name.Split();
+            var align = splitName[0] == "1";
+            var type = splitName[1];
+            if (type == "unsigned")
+            {
+                type = $"unsigned {splitName[2]}";
+            }
+            var propertyValue = rootProperty.Value;
+            var evt = AssetTypeValueField.GetValueTypeByTypeName(type);
+
+            if (propertyValue.ValueKind is JsonValueKind.Array)
+            {
+                if (evt != EnumValueTypes.ByteArray)
+                {
+                    var size = propertyValue.GetArrayLength();
+                    Writer.Write(size);
+
+                    var objEnumerator = propertyValue.EnumerateArray().SelectMany(o => o.EnumerateObject());
+                    foreach (var property in objEnumerator)
+                    {
+                        RecurseJsonDump(property);
+                    }
+
+                    if (align)
+                        Writer.Align();
+                }
+                else
+                {
+                    var count = propertyValue.GetArrayLength();
+                    var byteArrayData = new byte[count];
+                    var i = 0;
+                    foreach (var byteItem in propertyValue.EnumerateArray())
+                    {
+                        byteArrayData[i++] = byteItem.GetByte();
+                    }
+                    Writer.Write(byteArrayData.Length);
+                    Writer.Write(byteArrayData);
+                }
+            }
+            else if (propertyValue.ValueKind is JsonValueKind.Object)
+            {
+                foreach (var property in propertyValue.EnumerateObject())
+                {
+                    RecurseJsonDump(property);
+                }
+
+                if (align)
+                    Writer.Align();
+            }
+            else
+            {
+                var valueStr = propertyValue.ToString();
+                var success = WriteData(evt, valueStr);
+
+                if (!success)
+                    error.Append(string.Format("An error occurred while writing the value \"{0}\" of type \"{1}\".\n", valueStr, type));
+
+                if (align)
+                    Writer.Align();
+            }
+
+            if (error.Length != 0)
+            {
+                throw new Exception(error.ToString());
+            }
         }
     }
 }

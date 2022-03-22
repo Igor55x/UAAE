@@ -19,7 +19,7 @@ namespace AssetsAdvancedEditor.Assets
                 possibleBundleHeader = reader.ReadStringLength(7);
                 reader.Position = 0x08;
                 possibleFormat = reader.ReadInt32();
-                reader.Position = 0x14;
+                reader.Position = possibleFormat >= 0x16 ? 0x30 : 0x14;
 
                 if (possibleFormat >= 0x16)
                     reader.Position += 0x1c;
