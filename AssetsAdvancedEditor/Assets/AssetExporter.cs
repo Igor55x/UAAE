@@ -16,13 +16,25 @@ namespace AssetsAdvancedEditor.Assets
 
         public static void ExportRawAsset(string path, AssetItem item)
         {
+            using var fs = File.OpenWrite(path);
+            ExportRawAsset(fs, item);
+        }
+
+        public static void ExportRawAsset(Stream stream, AssetItem item)
+        {
             var br = item.Cont.FileReader;
             br.Position = item.Position;
             var data = br.ReadBytes((int)item.Size);
-            File.WriteAllBytes(path, data);
+            stream.Write(data);
         }
 
         public static void ExportDump(string path, AssetTypeValueField field, DumpType dumpType)
+        {
+            using var fs = File.OpenWrite(path);
+            ExportDump(fs, field, dumpType);
+        }
+
+        public static void ExportDump(Stream stream, AssetTypeValueField field, DumpType dumpType)
         {
             try
             {
@@ -30,8 +42,7 @@ namespace AssetsAdvancedEditor.Assets
                 {
                     case DumpType.TXT:
                         {
-                            using var fs = File.OpenWrite(path);
-                            using var writer = new StreamWriter(fs);
+                            using var writer = new StreamWriter(stream);
                             Writer = writer;
                             RecurseTextDump(field);
                             break;
@@ -41,18 +52,17 @@ namespace AssetsAdvancedEditor.Assets
                             Doc = new XmlDocument();
                             var result = RecurseXmlDump(field);
                             Doc.AppendChild(result);
-                            Doc.Save(path);
+                            Doc.Save(stream);
                             break;
                         }
                     case DumpType.JSON:
                         {
-                            using var fs = File.OpenWrite(path);
                             var options = new JsonWriterOptions
                             {
                                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                                 Indented = true
                             };
-                            using var writer = new Utf8JsonWriter(fs, options);
+                            using var writer = new Utf8JsonWriter(stream, options);
                             JWriter = writer;
                             JWriter.WriteStartObject();
                             RecurseJsonDump(field);
@@ -182,53 +192,60 @@ namespace AssetsAdvancedEditor.Assets
             var typeName = template.type;
             var fieldName = template.name;
             var isArray = template.isArray;
+            var valueType = template.valueType;
 
             // String's field isn't aligned but its array is
-            if (template.valueType == EnumValueTypes.String)
+            if (valueType == EnumValueTypes.String)
                 align = "True";
 
-            // Mainly to handle enum fields not having the int type name
-            if (template.valueType != EnumValueTypes.None &&
-                template.valueType != EnumValueTypes.Array &&
-                template.valueType != EnumValueTypes.ByteArray)
+            if (valueType != EnumValueTypes.None)
             {
-                typeName = template.valueType.ToString();
+                typeName = valueType.ToString();
             }
 
             var value = field.GetValue();
             var hasValue = value != null;
-            var nodeName = hasValue ? value.GetValueType().ToString() : "Object";
-            var e = Doc.CreateElement(isArray ? "Array" : nodeName);
-            e.SetAttribute("align", align);
+            var nodeName = hasValue ? typeName : "Object";
+            var e = Doc.CreateElement(nodeName);
 
+            e.SetAttribute("Align", align);
             if (!hasValue)
             {
                 e.SetAttribute("Type", typeName);
+            }
+            else if (valueType is EnumValueTypes.ByteArray)
+            {
+                e.SetAttribute("Type", template.type);
             }
             e.SetAttribute("Name", fieldName);
 
             if (isArray)
             {
-                var sizeTemplate = template.children[0];
-                var sizeAlign = sizeTemplate.align ? "True" : "False";
-                var sizeType = sizeTemplate.type;
-                var sizeName = sizeTemplate.name;
-                var size = value.AsArray().size;
-                e.SetAttribute("Size", size.ToString());
-                e.SetAttribute("Align", sizeAlign);
-                e.SetAttribute("Type", sizeType);
-                e.SetAttribute("Name", sizeName);
-                for (var i = 0; i < field.ChildrenCount; i++)
+                if (valueType != EnumValueTypes.ByteArray)
                 {
-                    var result = RecurseXmlDump(field.Children[i]);
+                    var size = value.AsArray().size;
+                    e.SetAttribute("Size", size.ToString());
+                    for (var i = 0; i < field.ChildrenCount; i++)
+                    {
+                        var result = RecurseXmlDump(field.Children[i]);
+                        e.AppendChild(result);
+                    }
+                }
+                else
+                {
+                    var byteArray = value.AsByteArray();
+                    var data = byteArray.data;
+                    var size = (int)byteArray.size;
+                    e.SetAttribute("Size", size.ToString());
+                    var result = Doc.CreateTextNode(Convert.ToBase64String(data));
                     e.AppendChild(result);
                 }
             }
             else
             {
-                var valueStr = "";
                 if (value != null)
                 {
+                    var valueStr = "";
                     var evt = value.GetValueType();
                     if (evt is EnumValueTypes.String)
                     {

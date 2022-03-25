@@ -25,7 +25,7 @@ UAAE isn't so `advanced` because it is still missing a lot of features and may h
 * Dump export/import in
   * TXT format
   * JSON format
-  * XML format **(export only)**
+  * XML format
 * Save modified assets files and bundle file
 * Command line support (beta)
 * Plugin support
@@ -59,9 +59,6 @@ This list may be incomplete!
   * Transform
 * ~~Go to asset option~~
 * Asset preview option
-* Dump export/import in
-  * ~~JSON format~~
-  * ~~XML format~~
 * Plugins
   * ~~Texture plugin~~ (including sprite editor)
   * ~~TextAsset plugin~~

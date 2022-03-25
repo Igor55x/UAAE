@@ -8,14 +8,14 @@ namespace AssetsAdvancedEditor.Winforms
 {
     public partial class AssetData : Form
     {
-        public AssetTypeValueField BaseField;
         public string TempPath;
+        public AssetTypeValueField BaseField;
+
         public AssetData(AssetTypeValueField baseField)
         {
             InitializeComponent();
             BaseField = baseField;
             PopulateTree();
-            LoadDump();
         }
 
         private void PopulateTree()
@@ -64,21 +64,21 @@ namespace AssetsAdvancedEditor.Winforms
             }
         }
 
-        private void LoadDump()
+        private void CboxDumpType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            var filePath = Path.GetTempFileName();
-            AssetExporter.ExportDump(filePath, BaseField, DumpType.TXT);
-            TempPath = filePath;
-            boxDumpView.Lines = File.ReadAllLines(filePath);
+            TempPath = Path.GetTempFileName();
+            var dumpType = (DumpType)cboxDumpType.SelectedIndex;
+            AssetExporter.ExportDump(TempPath, BaseField, dumpType);
+            boxDumpView.Lines = File.ReadAllLines(TempPath);
         }
 
-        private void openAll_Click(object sender, EventArgs e) => rawViewTree?.ExpandAll();
+        private void OpenAll_Click(object sender, EventArgs e) => rawViewTree?.ExpandAll();
 
-        private void closeAll_Click(object sender, EventArgs e) => rawViewTree?.CollapseAll();
+        private void CloseAll_Click(object sender, EventArgs e) => rawViewTree?.CollapseAll();
 
-        private void openDown_Click(object sender, EventArgs e) => rawViewTree.SelectedNode?.ExpandAll();
+        private void OpenDown_Click(object sender, EventArgs e) => rawViewTree.SelectedNode?.ExpandAll();
 
-        private void closeDown_Click(object sender, EventArgs e) => rawViewTree.SelectedNode?.Collapse(false);
+        private void CloseDown_Click(object sender, EventArgs e) => rawViewTree.SelectedNode?.Collapse(false);
 
         private void AssetData_FormClosed(object sender, FormClosedEventArgs e)
         {

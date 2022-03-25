@@ -458,7 +458,7 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void BatchExportDump(List<AssetItem> selectedItems)
         {
-            var dialog = new DumpTypeDialog();
+            var dialog = new BatchExport();
             if (dialog.ShowDialog() != DialogResult.OK) return;
             var dumpType = dialog.dumpType;
             var ext = dumpType switch
@@ -543,9 +543,10 @@ namespace AssetsAdvancedEditor.Winforms
                 var selectedFilePath = batchItem.ImportFile;
                 var affectedItem = batchItem.Item;
 
-                var replacer = selectedFilePath.EndsWith(".dat") ?
-                    AssetImporter.ImportRawAsset(selectedFilePath, affectedItem) :
-                    AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
+                if (!selectedFilePath.EndsWith(".dat"))
+                    continue;
+
+                var replacer = AssetImporter.ImportRawAsset(selectedFilePath, affectedItem);
 
                 Workspace.AddReplacer(ref affectedItem, replacer);
             }
@@ -594,21 +595,24 @@ namespace AssetsAdvancedEditor.Winforms
                 var batchItem = batchItems[i];
                 var selectedFilePath = batchItem.ImportFile;
                 var affectedItem = batchItem.Item;
+                var ext = Path.GetExtension(selectedFilePath);
+                DumpType dumpType;
+                switch (ext)
+                {
+                    case ".txt":
+                        dumpType = DumpType.TXT;
+                        break;
+                    case ".json":
+                        dumpType = DumpType.JSON;
+                        break;
+                    case ".xml":
+                        dumpType = DumpType.XML;
+                        break;
+                    default:
+                        continue;
+                }
 
-                AssetsReplacer replacer;
-                if (selectedFilePath.EndsWith(".txt"))
-                {
-                    replacer = AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.TXT);
-                }
-                else if (selectedFilePath.EndsWith(".json"))
-                {
-                    replacer = AssetImporter.ImportDump(selectedFilePath, affectedItem, DumpType.JSON);
-                }
-                else
-                {
-                    replacer = AssetImporter.ImportRawAsset(selectedFilePath, affectedItem);
-                }
-
+                var replacer = AssetImporter.ImportDump(selectedFilePath, affectedItem, dumpType);
                 Workspace.AddReplacer(ref affectedItem, replacer);
             }
         }
@@ -618,14 +622,14 @@ namespace AssetsAdvancedEditor.Winforms
             var ofd = new OpenFileDialog
             {
                 Title = @"Import dump",
-                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json" // UAAE xml dump (*.xml)|*.xml
+                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json|UAAE xml dump (*.xml)|*.xml"
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
             var dumpType = ofd.FilterIndex switch
             {
                 1 => DumpType.TXT,
                 2 => DumpType.JSON,
-                //3 => DumpType.XML,
+                3 => DumpType.XML,
                 _ => DumpType.TXT
             };
             var replacer = AssetImporter.ImportDump(ofd.FileName, selectedItem, dumpType);

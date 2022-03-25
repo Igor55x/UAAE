@@ -1,7 +1,7 @@
 ﻿
 namespace AssetsAdvancedEditor.Winforms
 {
-    partial class DumpTypeDialog
+    partial class BatchExport
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@ namespace AssetsAdvancedEditor.Winforms
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DumpTypeDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BatchExport));
             this.rbtnXML = new System.Windows.Forms.RadioButton();
             this.rbtnTXT = new System.Windows.Forms.RadioButton();
             this.lblXML = new System.Windows.Forms.Label();
@@ -87,9 +87,9 @@ namespace AssetsAdvancedEditor.Winforms
             this.lblQuestion.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblQuestion.Location = new System.Drawing.Point(11, 9);
             this.lblQuestion.Name = "lblQuestion";
-            this.lblQuestion.Size = new System.Drawing.Size(220, 20);
+            this.lblQuestion.Size = new System.Drawing.Size(206, 20);
             this.lblQuestion.TabIndex = 13;
-            this.lblQuestion.Text = "Select the type of dump export";
+            this.lblQuestion.Text = "Select a dump type to export";
             // 
             // btnCancel
             // 
@@ -128,9 +128,9 @@ namespace AssetsAdvancedEditor.Winforms
             this.lblJSON.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.lblJSON.Location = new System.Drawing.Point(30, 65);
             this.lblJSON.Name = "lblJSON";
-            this.lblJSON.Size = new System.Drawing.Size(276, 17);
+            this.lblJSON.Size = new System.Drawing.Size(150, 17);
             this.lblJSON.TabIndex = 18;
-            this.lblJSON.Text = "JSON: UAAE json dump (not supported yet).";
+            this.lblJSON.Text = "JSON: UAAE json dump";
             // 
             // DumpTypeDialog
             // 

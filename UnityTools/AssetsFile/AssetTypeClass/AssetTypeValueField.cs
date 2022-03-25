@@ -98,8 +98,8 @@ namespace UnityTools
                 case "ushort":
                     return EnumValueTypes.UInt16;
                 case "sint32":
+                case "int32":
                 case "int":
-                    return EnumValueTypes.Int32;
                 case "type*":
                     return EnumValueTypes.Int32;
                 case "uint32":

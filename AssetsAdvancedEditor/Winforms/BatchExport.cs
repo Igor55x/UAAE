@@ -5,11 +5,11 @@ using AssetsAdvancedEditor.Utils;
 
 namespace AssetsAdvancedEditor.Winforms
 {
-    public partial class DumpTypeDialog : Form
+    public partial class BatchExport : Form
     {
         public DumpType dumpType;
 
-        public DumpTypeDialog()
+        public BatchExport()
         {
             InitializeComponent();
         }
@@ -17,11 +17,17 @@ namespace AssetsAdvancedEditor.Winforms
         private void btnOK_Click(object sender, EventArgs e)
         {
             if (rbtnTXT.Checked)
+            {
                 dumpType = DumpType.TXT;
+            }
             else if (rbtnXML.Checked)
+            {
                 dumpType = DumpType.XML;
+            }
             else if (rbtnJSON.Checked)
+            {
                 dumpType = DumpType.JSON;
+            }
             else
             {
                 MsgBoxUtils.ShowErrorDialog("You didn't choose any dump type!\n" +

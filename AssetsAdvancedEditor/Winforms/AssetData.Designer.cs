@@ -33,6 +33,7 @@
             this.tpTreeView = new System.Windows.Forms.TabPage();
             this.rawViewTree = new System.Windows.Forms.TreeView();
             this.tpDumpView = new System.Windows.Forms.TabPage();
+            this.cboxDumpType = new System.Windows.Forms.ComboBox();
             this.boxDumpView = new System.Windows.Forms.TextBox();
             this.btnCloseDown = new System.Windows.Forms.Button();
             this.btnOpenDown = new System.Windows.Forms.Button();
@@ -82,6 +83,7 @@
             // 
             // tpDumpView
             // 
+            this.tpDumpView.Controls.Add(this.cboxDumpType);
             this.tpDumpView.Controls.Add(this.boxDumpView);
             this.tpDumpView.Location = new System.Drawing.Point(4, 24);
             this.tpDumpView.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
@@ -92,8 +94,27 @@
             this.tpDumpView.Text = "Dump View";
             this.tpDumpView.UseVisualStyleBackColor = true;
             // 
+            // cboxDumpType
+            // 
+            this.cboxDumpType.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cboxDumpType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboxDumpType.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.cboxDumpType.FormattingEnabled = true;
+            this.cboxDumpType.Items.AddRange(new object[] {
+            "TXT",
+            "XML",
+            "JSON"});
+            this.cboxDumpType.Location = new System.Drawing.Point(311, 6);
+            this.cboxDumpType.Name = "cboxDumpType";
+            this.cboxDumpType.Size = new System.Drawing.Size(65, 25);
+            this.cboxDumpType.TabIndex = 4;
+            this.cboxDumpType.SelectedIndexChanged += new System.EventHandler(this.CboxDumpType_SelectedIndexChanged);
+            // 
             // boxDumpView
             // 
+            this.boxDumpView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.boxDumpView.BackColor = System.Drawing.SystemColors.Window;
             this.boxDumpView.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
             this.boxDumpView.Location = new System.Drawing.Point(0, 0);
@@ -115,7 +136,7 @@
             this.btnCloseDown.TabIndex = 3;
             this.btnCloseDown.Text = "Close Down";
             this.btnCloseDown.UseVisualStyleBackColor = true;
-            this.btnCloseDown.Click += new System.EventHandler(this.closeDown_Click);
+            this.btnCloseDown.Click += new System.EventHandler(this.CloseDown_Click);
             // 
             // btnOpenDown
             // 
@@ -128,7 +149,7 @@
             this.btnOpenDown.TabIndex = 2;
             this.btnOpenDown.Text = "Open Down";
             this.btnOpenDown.UseVisualStyleBackColor = true;
-            this.btnOpenDown.Click += new System.EventHandler(this.openDown_Click);
+            this.btnOpenDown.Click += new System.EventHandler(this.OpenDown_Click);
             // 
             // btnCloseAll
             // 
@@ -141,7 +162,7 @@
             this.btnCloseAll.TabIndex = 1;
             this.btnCloseAll.Text = "Close all";
             this.btnCloseAll.UseVisualStyleBackColor = true;
-            this.btnCloseAll.Click += new System.EventHandler(this.closeAll_Click);
+            this.btnCloseAll.Click += new System.EventHandler(this.CloseAll_Click);
             // 
             // btnOpenAll
             // 
@@ -154,7 +175,7 @@
             this.btnOpenAll.TabIndex = 0;
             this.btnOpenAll.Text = "Open all";
             this.btnOpenAll.UseVisualStyleBackColor = true;
-            this.btnOpenAll.Click += new System.EventHandler(this.openAll_Click);
+            this.btnOpenAll.Click += new System.EventHandler(this.OpenAll_Click);
             // 
             // AssetData
             // 
@@ -194,5 +215,6 @@
         private System.Windows.Forms.Button btnCloseAll;
         private System.Windows.Forms.Button btnOpenAll;
         private System.Windows.Forms.TextBox boxDumpView;
+        private System.Windows.Forms.ComboBox cboxDumpType;
     }
 }

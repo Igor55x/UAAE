@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Xml;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 
@@ -40,6 +41,9 @@ namespace AssetsAdvancedEditor.Assets
                         }
                     case DumpType.XML:
                         {
+                            using var fs = File.OpenRead(path);
+                            using var reader = new StreamReader(fs);
+                            Reader = reader;
                             ImportXmlDump();
                             break;
                         }
@@ -230,7 +234,69 @@ namespace AssetsAdvancedEditor.Assets
 
         private static void ImportXmlDump()
         {
-            // todo
+            var doc = new XmlDocument();
+            var xml = Reader.ReadToEnd();
+            doc.LoadXml(xml);
+            RecurseXmlDump(doc.ChildNodes);
+        }
+
+        private static void RecurseXmlDump(XmlNodeList nodes)
+        {
+            var error = new StringBuilder();
+
+            for (var i = 0; i < nodes.Count; i++)
+            {
+                var node = nodes[i];
+                var nodeAttributes = node.Attributes;
+                var align = nodeAttributes["Align"].Value == "True";
+                var sizeValue = nodeAttributes["Size"]?.Value;
+                var type = nodeAttributes["Type"]?.Value ?? node.Name;
+                var isArray = sizeValue != null;
+                var evt = AssetTypeValueField.GetValueTypeByTypeName(type);
+
+                if (node.NodeType is XmlNodeType.Element)
+                {
+                    if (isArray)
+                    {
+                        if (evt != EnumValueTypes.ByteArray)
+                        {
+                            var size = int.Parse(sizeValue);
+                            Writer.Write(size);
+                            if (size > 0)
+                            {
+                                RecurseXmlDump(node.ChildNodes);
+                            }
+                        }
+                        else
+                        {
+                            var size = int.Parse(nodeAttributes["Size"].Value);
+                            Writer.Write(size);
+                            var data = Convert.FromBase64String(node.InnerText);
+                            Writer.Write(data);
+                        }
+                    }
+                    else if (1 <= (int)evt && (int)evt <= 12)
+                    {
+                        var valueStr = node.InnerText;
+                        var success = WriteData(evt, valueStr);
+
+                        if (!success)
+                            error.Append(string.Format("An error occurred while writing the value \"{0}\" of type \"{1}\".\n", valueStr, type));
+                    }
+                    else
+                    {
+                        RecurseXmlDump(node.ChildNodes);
+                    }
+
+                    if (align)
+                        Writer.Align();
+                }
+            }
+
+            if (error.Length != 0)
+            {
+                throw new Exception(error.ToString());
+            }
         }
 
         private static void ImportJsonDump()
