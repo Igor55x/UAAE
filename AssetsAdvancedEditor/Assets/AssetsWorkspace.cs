@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Plugins;
 using AssetsAdvancedEditor.Utils;
@@ -98,10 +97,7 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var reader = new AssetsFileReader(previewStream)
-                {
-                    BigEndian = false
-                };
+                var reader = new AssetsFileReader(previewStream);
                 item.Position = reader.Position;
                 item.Cont = new AssetContainer(reader, forInstance);
                 UpdateAssetInfo(ref item, replacer);
@@ -166,13 +162,12 @@ namespace AssetsAdvancedEditor.Assets
 
         public AssetItem GetAssetItem(int fileId, long pathId, bool onlyInfo = false)
         {
-            if (fileId <= LoadedFiles.Count - 1)
-            {
-                var fileInst = LoadedFiles[fileId];
-                var assetId = new AssetID(fileInst.path, pathId);
-                return GetAssetItem(assetId, onlyInfo);
-            }
-            return null;
+            if (fileId < 0 || fileId >= LoadedFiles.Count)
+                return null;
+
+            var fileInst = LoadedFiles[fileId];
+            var assetId = new AssetID(fileInst.path, pathId);
+            return GetAssetItem(assetId, onlyInfo);
         }
 
         public AssetItem GetAssetItem(AssetTypeValueField pptrField)

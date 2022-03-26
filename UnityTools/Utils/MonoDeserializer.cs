@@ -8,22 +8,22 @@ namespace UnityTools
 {
     public class MonoDeserializer
     {
-        public uint format;
+        public UnityVersion unityVersion;
         public int childrenCount;
         public List<AssetTypeTemplateField> children;
         private static readonly Dictionary<string, AssemblyDefinition> loadedAssemblies = new ();
-        public void Read(string typeName, AssemblyDefinition assembly, uint format)
+        public void Read(string typeName, AssemblyDefinition assembly, UnityVersion unityVersion)
         {
-            this.format = format;
+            this.unityVersion = unityVersion;
             children = new List<AssetTypeTemplateField>();
             RecursiveTypeLoad(assembly.MainModule, typeName, children);
             childrenCount = children.Count;
         }
 
-        public void Read(string typeName, string assemblyPath, uint format)
+        public void Read(string typeName, string assemblyPath, UnityVersion unityVersion)
         {
             var asmDef = GetAssemblyWithDependencies(assemblyPath);
-            Read(typeName, asmDef, format);
+            Read(typeName, asmDef, unityVersion);
         }
 
         public static AssemblyDefinition GetAssemblyWithDependencies(string path)
@@ -72,7 +72,7 @@ namespace UnityTools
                     }
 
                     var mc = new MonoDeserializer();
-                    mc.Read(scriptName, asmDef, inst.file.header.Version);
+                    mc.Read(scriptName, asmDef, new UnityVersion(inst.file.typeTree.unityVersion));
                     var monoTemplateFields = mc.children;
 
                     baseField.AddChildren(monoTemplateFields);
@@ -398,6 +398,7 @@ namespace UnityTools
                 field.type = $"PPtr<${field.type}>";
             else
                 field.type = $"PPtr<{field.type}>";
+
             field.childrenCount = 2;
 
             var fileID = new AssetTypeTemplateField
@@ -416,15 +417,15 @@ namespace UnityTools
             {
                 name = "m_PathID"
             };
-            if (format < 0x0E)
-            {
-                pathID.type = "int";
-                pathID.valueType = EnumValueTypes.Int32;
-            }
-            else
+            if (unityVersion.Major >= 5)
             {
                 pathID.type = "SInt64";
                 pathID.valueType = EnumValueTypes.Int64;
+            }
+            else
+            {
+                pathID.type = "int";
+                pathID.valueType = EnumValueTypes.Int32;
             }
             pathID.isArray = false;
             pathID.align = false;
@@ -488,15 +489,29 @@ namespace UnityTools
 
         private void SetGradient(AssetTypeTemplateField field)
         {
-            field.childrenCount = 27;
-            var key0 = CreateTemplateField("key0", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key1 = CreateTemplateField("key1", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key2 = CreateTemplateField("key2", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key3 = CreateTemplateField("key3", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key4 = CreateTemplateField("key4", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key5 = CreateTemplateField("key5", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key6 = CreateTemplateField("key6", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
-            var key7 = CreateTemplateField("key7", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+            AssetTypeTemplateField key0, key1, key2, key3, key4, key5, key6, key7;
+            if (unityVersion.Major > 5 || (unityVersion.Major == 5 && unityVersion.Minor >= 6))
+            {
+                key0 = CreateTemplateField("key0", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key1 = CreateTemplateField("key1", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key2 = CreateTemplateField("key2", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key3 = CreateTemplateField("key3", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key4 = CreateTemplateField("key4", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key5 = CreateTemplateField("key5", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key6 = CreateTemplateField("key6", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+                key7 = CreateTemplateField("key7", "ColorRGBA", EnumValueTypes.None, 4, RGBAf());
+            }
+            else
+            {
+                key0 = CreateTemplateField("key0", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key1 = CreateTemplateField("key1", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key2 = CreateTemplateField("key2", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key3 = CreateTemplateField("key3", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key4 = CreateTemplateField("key4", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key5 = CreateTemplateField("key5", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key6 = CreateTemplateField("key6", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+                key7 = CreateTemplateField("key7", "ColorRGBA", EnumValueTypes.None, 1, RGBA32());
+            }
             var ctime0 = CreateTemplateField("ctime0", "UInt16", EnumValueTypes.UInt16);
             var ctime1 = CreateTemplateField("ctime1", "UInt16", EnumValueTypes.UInt16);
             var ctime2 = CreateTemplateField("ctime2", "UInt16", EnumValueTypes.UInt16);
@@ -516,10 +531,22 @@ namespace UnityTools
             var m_Mode = CreateTemplateField("m_Mode", "int", EnumValueTypes.Int32);
             var m_NumColorKeys = CreateTemplateField("m_NumColorKeys", "UInt8", EnumValueTypes.UInt8);
             var m_NumAlphaKeys = CreateTemplateField("m_NumAlphaKeys", "UInt8", EnumValueTypes.UInt8, false, true);
-            field.children = new List<AssetTypeTemplateField>()
+            if (unityVersion.Major > 5 || (unityVersion.Major == 5 && unityVersion.Minor >= 5))
             {
-                key0, key1, key2, key3, key4, key5, key6, key7, ctime0, ctime1, ctime2, ctime3, ctime4, ctime5, ctime6, ctime7, atime0, atime1, atime2, atime3, atime4, atime5, atime6, atime7, m_Mode, m_NumColorKeys, m_NumAlphaKeys
-            };
+                field.childrenCount = 27;
+                field.children = new List<AssetTypeTemplateField>()
+                {
+                    key0, key1, key2, key3, key4, key5, key6, key7, ctime0, ctime1, ctime2, ctime3, ctime4, ctime5, ctime6, ctime7, atime0, atime1, atime2, atime3, atime4, atime5, atime6, atime7, m_Mode, m_NumColorKeys, m_NumAlphaKeys
+                };
+            }
+            else
+            {
+                field.childrenCount = 26;
+                field.children = new List<AssetTypeTemplateField>()
+                {
+                    key0, key1, key2, key3, key4, key5, key6, key7, ctime0, ctime1, ctime2, ctime3, ctime4, ctime5, ctime6, ctime7, atime0, atime1, atime2, atime3, atime4, atime5, atime6, atime7, m_NumColorKeys, m_NumAlphaKeys
+                };
+            }
         }
 
         private List<AssetTypeTemplateField> RGBAf()
@@ -529,6 +556,12 @@ namespace UnityTools
             var b = CreateTemplateField("b", "float", EnumValueTypes.Float);
             var a = CreateTemplateField("a", "float", EnumValueTypes.Float);
             return new List<AssetTypeTemplateField>() { r, g, b, a };
+        }
+
+        private List<AssetTypeTemplateField> RGBA32()
+        {
+            var rgba = CreateTemplateField("rgba", "unsigned int", EnumValueTypes.UInt32);
+            return new List<AssetTypeTemplateField>() { rgba };
         }
 
         private void SetAnimationCurve(AssetTypeTemplateField field)
@@ -545,7 +578,7 @@ namespace UnityTools
             /////////////
             var size = CreateTemplateField("size", "int", EnumValueTypes.Int32);
             AssetTypeTemplateField data;
-            if (format >= 0x13)
+            if (unityVersion.Major >= 2018)
             {
                 data = CreateTemplateField("data", "Keyframe", EnumValueTypes.None, 7, new List<AssetTypeTemplateField>()
                 {
