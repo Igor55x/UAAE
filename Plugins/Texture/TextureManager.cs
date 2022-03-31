@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using UnityTools;
+﻿using UnityTools;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -13,14 +12,10 @@ namespace Plugins.Texture
         {
             using var image = Image.Load<Rgba32>(file);
             imgSize = new Size(image.Width, image.Height);
-            var decData = new byte[image.Width * image.Height * Unsafe.SizeOf<Rgba32>()];
+            var decData = new byte[image.Width * image.Height * 4];
 
             image.Mutate(i => i.Flip(FlipMode.Vertical));
             image.CopyPixelDataTo(decData);
-            if (decData == null)
-            {
-                return null; //rip
-            }
 
             var encData = EncodeTexture(decData, image.Width, image.Height, format);
             return encData;

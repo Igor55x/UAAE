@@ -126,9 +126,7 @@ namespace Plugins.Texture
 
             for (var i = 0; i < dest.Length; i += 4)
             {
-                var temp = dest[i];
-                dest[i] = dest[i + 2];
-                dest[i + 2] = temp;
+                (dest[i + 2], dest[i]) = (dest[i], dest[i + 2]);
             }
             return dest;
         }

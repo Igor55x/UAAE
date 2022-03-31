@@ -293,7 +293,7 @@ namespace AssetsAdvancedEditor.Assets
                 var asmDef = LoadedAssemblies[assemblyName];
 
                 var mc = new MonoDeserializer();
-                mc.Read(scriptClassName, asmDef, file.header.Version);
+                mc.Read(scriptClassName, asmDef, new UnityVersion(file.typeTree.unityVersion));
                 var monoTemplateFields = mc.children;
 
                 baseTemp.AddChildren(monoTemplateFields);

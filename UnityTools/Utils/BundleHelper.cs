@@ -1,8 +1,8 @@
-﻿using UnityTools.Compression.LZ4;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using SevenZip.Compression.LZMA;
 using UnityTools.Utils;
+using UnityTools.Compression;
+using System;
 
 namespace UnityTools
 {
@@ -129,29 +129,25 @@ namespace UnityTools
                 return;
 
             reader.Position = bundle.Header.GetBundleInfoOffset();
-            MemoryStream blocksInfoStream;
+            var blocksInfoStream = new MemoryStream();
             var compressedSize = (int)bundle.Header.CompressedSize;
+            var compressedBlock = reader.ReadBytes(compressedSize);
+            var decompressedSize = (int)bundle.Header.DecompressedSize;
             switch (bundle.Header.GetCompressionType())
             {
                 case AssetBundleCompressionType.Lzma:
-                {
-                    using var mstream = new MemoryStream(reader.ReadBytes(compressedSize));
-                    blocksInfoStream = SevenZipHelper.StreamDecompress(mstream);
-                    break;
-                }
+                    {
+                        using var ms = new MemoryStream(compressedBlock);
+                        LzmaHelper.DecompressStream(ms, blocksInfoStream, decompressedSize);
+                        break;
+                    }
                 case AssetBundleCompressionType.Lz4:
                 case AssetBundleCompressionType.Lz4HC:
-                {
-                    var uncompressedBytes = new byte[bundle.Header.DecompressedSize];
-                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
                     {
-                        var decoder = new Lz4DecoderStream(ms);
-                        decoder.Read(uncompressedBytes, 0, (int)bundle.Header.DecompressedSize);
-                        decoder.Dispose();
+                        var decompressedBlock = Lz4Helper.Decompress(compressedBlock, decompressedSize);
+                        blocksInfoStream = new MemoryStream(decompressedBlock);
+                        break;
                     }
-                    blocksInfoStream = new MemoryStream(uncompressedBytes);
-                    break;
-                }
                 default:
                     blocksInfoStream = null;
                     break;

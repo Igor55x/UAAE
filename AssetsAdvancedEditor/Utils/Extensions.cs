@@ -3,8 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AssetsAdvancedEditor.Assets;
-using SevenZip.Compression.LZMA;
-using UnityTools.Compression.LZ4;
+using UnityTools.Compression;
 
 namespace AssetsAdvancedEditor.Utils
 {
@@ -309,41 +308,30 @@ namespace AssetsAdvancedEditor.Utils
         {
             var reader = bundle.Reader;
             reader.Position = bundle.Header.GetBundleInfoOffset();
-            MemoryStream blocksInfoStream;
+            var blocksInfoStream = new MemoryStream();
             var compressedSize = (int)bundle.Header.CompressedSize;
-            byte[] uncompressedBytes;
+            var decompressedSize = (int)bundle.Header.DecompressedSize;
+            var compressedBlock = reader.ReadBytes(compressedSize);
             switch (bundle.Header.GetCompressionType())
             {
                 case AssetBundleCompressionType.Lzma:
-                {
-                    uncompressedBytes = new byte[bundle.Header.DecompressedSize];
-                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
                     {
-                        var decoder = SevenZipHelper.StreamDecompress(ms, compressedSize);
-                        decoder.Read(uncompressedBytes, 0, (int)bundle.Header.DecompressedSize);
-                        decoder.Dispose();
+                        using var tempMs = new MemoryStream(compressedBlock);
+                        LzmaHelper.DecompressStream(tempMs, blocksInfoStream, decompressedSize);
+                        break;
                     }
-                    blocksInfoStream = new MemoryStream(uncompressedBytes);
-                    break;
-                }
                 case AssetBundleCompressionType.Lz4:
                 case AssetBundleCompressionType.Lz4HC:
-                {
-                    uncompressedBytes = new byte[bundle.Header.DecompressedSize];
-                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
                     {
-                        var decoder = new Lz4DecoderStream(ms);
-                        decoder.Read(uncompressedBytes, 0, (int)bundle.Header.DecompressedSize);
-                        decoder.Dispose();
+                        var decompressedBlock = Lz4Helper.Decompress(compressedBlock, decompressedSize);
+                        blocksInfoStream = new MemoryStream(decompressedBlock);
+                        break;
                     }
-                    blocksInfoStream = new MemoryStream(uncompressedBytes);
-                    break;
-                }
                 default:
-                {
-                    blocksInfoStream = null;
-                    break;
-                }
+                    {
+                        blocksInfoStream = null;
+                        break;
+                    }
             }
 
             var uncompressedMetadata = bundle.Metadata;

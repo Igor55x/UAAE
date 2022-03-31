@@ -84,7 +84,9 @@ namespace UnityTools
         public void Read(AssetsFileReader reader)
         {
             reader.BigEndian = true;
-            Net35Polyfill.TryParse(reader.ReadNullTerminated(), out Signature);
+            if (!Enum.TryParse(reader.ReadNullTerminated(), out Signature))
+                return;
+
             Version = reader.ReadUInt32();
             MinUnityVersion = reader.ReadNullTerminated();
             UnityVersion = reader.ReadNullTerminated();

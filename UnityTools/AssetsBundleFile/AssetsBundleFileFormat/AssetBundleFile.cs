@@ -1,10 +1,9 @@
-﻿using UnityTools.Compression.LZ4;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SevenZip.Compression.LZMA;
 using System;
 using UnityTools.Utils;
+using UnityTools.Compression;
 
 namespace UnityTools
 {
@@ -17,7 +16,6 @@ namespace UnityTools
 
         public void Close() => Reader.Close();
 
-#warning TODO: add full support for unity 3 version bundles
         public bool Read(AssetsFileReader reader, bool allowCompressed = false)
         {
             Reader = reader;
@@ -177,7 +175,7 @@ namespace UnityTools
                         var startPos = writer.Position;
 
                         Reader.Position = Header.GetFileDataOffset() + originalInfo.Offset;
-                        Reader.BaseStream.CopyToCompat(writer.BaseStream, originalInfo.DecompressedSize);
+                        Reader.BaseStream.CopyTo(writer.BaseStream, (int)originalInfo.DecompressedSize);
 
                         dirInfo.Offset = startPos - assetDataPos;
                     }
@@ -218,30 +216,29 @@ namespace UnityTools
             if (Read(reader, true))
             {
                 reader.Position = Header.GetBundleInfoOffset();
-                MemoryStream blocksInfoStream;
+                var blocksInfoStream = new MemoryStream();
                 var compressedSize = (int)Header.CompressedSize;
+                var blocksInfoBytes = reader.ReadBytes(compressedSize);
+
                 switch (Header.GetCompressionType())
                 {
                     case AssetBundleCompressionType.Lzma:
-                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
-                    {
-                        blocksInfoStream = SevenZipHelper.StreamDecompress(ms);
-                    }
-                    break;
+                        {
+                            using var ms = new MemoryStream(blocksInfoBytes);
+                            LzmaHelper.DecompressStream(ms, blocksInfoStream);
+                            break;
+                        }
                     case AssetBundleCompressionType.Lz4:
                     case AssetBundleCompressionType.Lz4HC:
-                    var uncompressedBytes = new byte[Header.DecompressedSize];
-                    using (var ms = new MemoryStream(reader.ReadBytes(compressedSize)))
-                    {
-                        var decoder = new Lz4DecoderStream(ms);
-                        decoder.Read(uncompressedBytes, 0, (int)Header.DecompressedSize);
-                        decoder.Dispose();
-                    }
-                    blocksInfoStream = new MemoryStream(uncompressedBytes);
-                    break;
+                        {
+                            var uncompressedSize = (int)Header.DecompressedSize;
+                            var uncompressedBytes = Lz4Helper.Decompress(blocksInfoBytes, uncompressedSize);
+                            blocksInfoStream = new MemoryStream(uncompressedBytes);
+                            break;
+                        }
                     default:
-                    blocksInfoStream = null;
-                    break;
+                        blocksInfoStream = null;
+                        break;
                 }
                 if (Header.GetCompressionType() != 0)
                 {
@@ -304,26 +301,23 @@ namespace UnityTools
                 for (var i = 0; i < newBundleInf6.BlockCount; i++)
                 {
                     var info = Metadata.BlocksInfo[i];
+                    var compressedBlockSize = (int)info.CompressedSize;
+                    var decompressedBlockSize = (int)info.DecompressedSize;
+                    var compressedBlock = reader.ReadBytes(compressedBlockSize);
                     switch (info.GetCompressionType())
                     {
-                    case 0:
-                        reader.BaseStream.CopyToCompat(writer.BaseStream, info.CompressedSize);
-                        break;
-                    case 1:
-                        SevenZipHelper.StreamDecompress(reader.BaseStream, writer.BaseStream, info.CompressedSize, info.DecompressedSize);
-                        break;
-                    case 2:
-                    case 3:
-                        using (var tempMs = new MemoryStream())
-                        {
-                            reader.BaseStream.CopyToCompat(tempMs, info.CompressedSize);
-                            tempMs.Position = 0;
-
-                            using var decoder = new Lz4DecoderStream(tempMs);
-                            decoder.CopyToCompat(writer.BaseStream, info.DecompressedSize);
+                        case 0:
+                            writer.Write(compressedBlock);
+                            break;
+                        case 1:
+                            LzmaHelper.DecompressStream(reader.BaseStream, writer.BaseStream, compressedBlockSize, decompressedBlockSize);
+                            break;
+                        case 2:
+                        case 3:
+                            var decompressedBlock = Lz4Helper.Decompress(compressedBlock, decompressedBlockSize);
+                            writer.Write(decompressedBlock);
+                            break;
                         }
-                        break;
-                    }
                 }
                 return true;
             }
@@ -380,37 +374,6 @@ namespace UnityTools
             switch (compType)
             {
                 case AssetBundleCompressionType.Lzma:
-                {
-                    Stream writeStream;
-                    if (blockInfoAtEnd)
-                        writeStream = writer.BaseStream;
-                    else
-                        writeStream = GetTempFileStream();
-
-                    var writeStreamStart = writeStream.Position;
-                    SevenZipHelper.Compress(bundleDataStream, writeStream);
-                    var writeStreamLength = (uint)(writeStream.Position - writeStreamStart);
-
-                    var blockInfo = new AssetBundleBlockInfo
-                    {
-                        CompressedSize = writeStreamLength,
-                        DecompressedSize = (uint)fileDataLength,
-                        Flags = 0x41
-                    };
-
-                    totalCompressedSize += blockInfo.CompressedSize;
-                    newBlocks.Add(blockInfo);
-
-                    if (!blockInfoAtEnd)
-                        newStreams.Add(writeStream);
-                    break;
-                }
-                case AssetBundleCompressionType.Lz4:
-                {
-                    // Compress into 0x20000 blocks
-                    var bundleDataReader = new BinaryReader(bundleDataStream);
-                    var uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
-                    while (uncompressedBlock.Length != 0)
                     {
                         Stream writeStream;
                         if (blockInfoAtEnd)
@@ -418,98 +381,127 @@ namespace UnityTools
                         else
                             writeStream = GetTempFileStream();
 
-                        var compressedBlock = LZ4Codec.Encode32HC(uncompressedBlock, 0, uncompressedBlock.Length);
+                        var writeStreamStart = writeStream.Position;
+                        LzmaHelper.CompressStream(bundleDataStream, writeStream);
+                        var writeStreamLength = (uint)(writeStream.Position - writeStreamStart);
 
-                        if (compressedBlock.Length > uncompressedBlock.Length)
+                        var blockInfo = new AssetBundleBlockInfo
                         {
-                            writeStream.Write(uncompressedBlock, 0, uncompressedBlock.Length);
+                            CompressedSize = writeStreamLength,
+                            DecompressedSize = (uint)fileDataLength,
+                            Flags = 0x41
+                        };
 
-                            var blockInfo = new AssetBundleBlockInfo
-                            {
-                                CompressedSize = (uint)uncompressedBlock.Length,
-                                DecompressedSize = (uint)uncompressedBlock.Length,
-                                Flags = 0x00
-                            };
-
-                            totalCompressedSize += blockInfo.CompressedSize;
-
-                            newBlocks.Add(blockInfo);
-                        }
-                        else
-                        {
-                            writeStream.Write(compressedBlock, 0, compressedBlock.Length);
-
-                            var blockInfo = new AssetBundleBlockInfo
-                            {
-                                CompressedSize = (uint)compressedBlock.Length,
-                                DecompressedSize = (uint)uncompressedBlock.Length,
-                                Flags = 0x03
-                            };
-
-                            totalCompressedSize += blockInfo.CompressedSize;
-
-                            newBlocks.Add(blockInfo);
-                        }
+                        totalCompressedSize += blockInfo.CompressedSize;
+                        newBlocks.Add(blockInfo);
 
                         if (!blockInfoAtEnd)
                             newStreams.Add(writeStream);
-
-                        uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
+                        break;
                     }
-                    break;
-                }
-                case AssetBundleCompressionType.None:
-                {
-                    var blockInfo = new AssetBundleBlockInfo()
+                case AssetBundleCompressionType.Lz4:
                     {
-                        CompressedSize = (uint)fileDataLength,
-                        DecompressedSize = (uint)fileDataLength,
-                        Flags = 0x00
-                    };
+                        // Compress into 0x20000 blocks
+                        var bundleDataReader = new BinaryReader(bundleDataStream);
+                        var uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
+                        while (uncompressedBlock.Length != 0)
+                        {
+                            Stream writeStream;
+                            if (blockInfoAtEnd)
+                                writeStream = writer.BaseStream;
+                            else
+                                writeStream = GetTempFileStream();
 
-                    totalCompressedSize += blockInfo.CompressedSize;
+                            var compressedBlock = Lz4Helper.Compress(uncompressedBlock);
+                            if (compressedBlock.Length > uncompressedBlock.Length)
+                            {
+                                writeStream.Write(uncompressedBlock, 0, uncompressedBlock.Length);
+                                
+                                var blockInfo = new AssetBundleBlockInfo
+                                {
+                                    CompressedSize = (uint)uncompressedBlock.Length,
+                                    DecompressedSize = (uint)uncompressedBlock.Length,
+                                    Flags = 0x00
+                                };
+                                
+                                totalCompressedSize += blockInfo.CompressedSize;
+                                newBlocks.Add(blockInfo);
+                            }
+                            else
+                            {
+                                writeStream.Write(compressedBlock, 0, compressedBlock.Length);
 
-                    newBlocks.Add(blockInfo);
+                                var blockInfo = new AssetBundleBlockInfo
+                                {
+                                    CompressedSize = (uint)compressedBlock.Length,
+                                    DecompressedSize = (uint)uncompressedBlock.Length,
+                                    Flags = 0x03
+                                };
 
-                    if (blockInfoAtEnd)
-                        bundleDataStream.CopyToCompat(writer.BaseStream);
-                    else
-                        newStreams.Add(bundleDataStream);
-                    break;
-                }
+                                totalCompressedSize += blockInfo.CompressedSize;
+
+                                newBlocks.Add(blockInfo);
+                            }
+
+                            if (!blockInfoAtEnd)
+                                newStreams.Add(writeStream);
+
+                            uncompressedBlock = bundleDataReader.ReadBytes(0x20000);
+                        }
+                        break;
+                    }
+                case AssetBundleCompressionType.None:
+                    {
+                        var blockInfo = new AssetBundleBlockInfo()
+                        {
+                            CompressedSize = (uint)fileDataLength,
+                            DecompressedSize = (uint)fileDataLength,
+                            Flags = 0x00
+                        };
+
+                        totalCompressedSize += blockInfo.CompressedSize;
+
+                        newBlocks.Add(blockInfo);
+
+                        if (blockInfoAtEnd)
+                            bundleDataStream.CopyTo(writer.BaseStream);
+                        else
+                            newStreams.Add(bundleDataStream);
+                        break;
+                    }
             }
 
             newMetadata.BlocksInfo = newBlocks.ToArray();
 
-            byte[] bundleInfoBytes;
+            byte[] blocksInfo;
             using (var memStream = new MemoryStream())
             {
                 var infoWriter = new AssetsFileWriter(memStream);
                 newMetadata.Write(Header, infoWriter);
-                bundleInfoBytes = memStream.ToArray();
+                blocksInfo = memStream.ToArray();
             }
 
             // Listing is usually lz4 even if the data blocks are lzma
-            var bundleInfoBytesCom = LZ4Codec.Encode32HC(bundleInfoBytes, 0, bundleInfoBytes.Length);
+            var compressedBlocksInfo = Lz4Helper.Compress(blocksInfo);
 
-            var totalFileSize = headerSize + bundleInfoBytesCom.Length + totalCompressedSize;
+            var totalFileSize = headerSize + compressedBlocksInfo.Length + totalCompressedSize;
             newHeader.Size = totalFileSize;
-            newHeader.DecompressedSize = (uint)bundleInfoBytes.Length;
-            newHeader.CompressedSize = (uint)bundleInfoBytesCom.Length;
+            newHeader.DecompressedSize = (uint)blocksInfo.Length;
+            newHeader.CompressedSize = (uint)compressedBlocksInfo.Length;
 
             if (!blockInfoAtEnd)
             {
-                writer.Write(bundleInfoBytesCom);
+                writer.Write(compressedBlocksInfo);
                 foreach (var newStream in newStreams)
                 {
                     newStream.Position = 0;
-                    newStream.CopyToCompat(writer.BaseStream);
+                    newStream.CopyTo(writer.BaseStream);
                     newStream.Close();
                 }
             }
             else
             {
-                writer.Write(bundleInfoBytesCom);
+                writer.Write(compressedBlocksInfo);
             }
 
             writer.Position = 0;

@@ -221,7 +221,7 @@ namespace UnityTools
                 {
                     var oldAssetInfo = oldAssetInfosByPathId[newAssetInfo.index];
                     reader.Position = header.DataOffset + oldAssetInfo.curFileOffset;
-                    reader.BaseStream.CopyToCompat(writer.BaseStream, oldAssetInfo.curFileSize);
+                    reader.BaseStream.CopyTo(writer.BaseStream, (int)oldAssetInfo.curFileSize);
                 }
 
                 newAssetInfo.curFileSize = (uint)(writer.Position - (newDataOffset + newAssetInfo.curFileOffset));

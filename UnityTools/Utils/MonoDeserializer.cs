@@ -83,13 +83,19 @@ namespace UnityTools
             return mainAti.GetBaseField();
         }
 
-        private void RecursiveTypeLoad(ModuleDefinition module, string typeName, List<AssetTypeTemplateField> attf)
+        private void RecursiveTypeLoad(ModuleDefinition module, string typeName, List<AssetTypeTemplateField> templates)
         {
-            var type = module.GetTypes().First(t => t.FullName.Equals(typeName));
-            RecursiveTypeLoad(type, attf);
+            foreach (var type in module.GetTypes())
+            {
+                if (type.FullName.Equals(typeName))
+                {
+                    RecursiveTypeLoad(type, templates);
+                    break;
+                }
+            }
         }
 
-        private void RecursiveTypeLoad(TypeDefinition type, List<AssetTypeTemplateField> attf)
+        private void RecursiveTypeLoad(TypeDefinition type, List<AssetTypeTemplateField> templates)
         {
             var baseName = type.BaseType.FullName;
             if (baseName != "System.Object" &&
@@ -98,10 +104,13 @@ namespace UnityTools
                 baseName != "UnityEngine.ScriptableObject")
             {
                 var typeDef = type.BaseType.Resolve();
-                RecursiveTypeLoad(typeDef, attf);
+                RecursiveTypeLoad(typeDef, templates);
             }
 
-            attf.AddRange(ReadTypes(type));
+            foreach (var template in ReadTypes(type))
+            {
+                templates.Add(template);
+            }
         }
 
         private List<AssetTypeTemplateField> ReadTypes(TypeDefinition type)
@@ -315,8 +324,8 @@ namespace UnityTools
 
             var data = new AssetTypeTemplateField
             {
-                name = string.Copy(field.name),
-                type = string.Copy(field.type),
+                name = new string(field.name),
+                type = new string(field.type),
                 valueType = field.valueType,
                 isArray = false,
                 align = false,//IsAlignable(field.valueType);
@@ -327,7 +336,7 @@ namespace UnityTools
 
             var array = new AssetTypeTemplateField
             {
-                name = string.Copy(field.name),
+                name = new string(field.name),
                 type = "Array",
                 valueType = EnumValueTypes.Array,
                 isArray = true,

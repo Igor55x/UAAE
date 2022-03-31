@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using SevenZip.Compression.LZMA;
-using UnityTools.Compression.LZ4;
+using UnityTools.Compression;
 
 namespace UnityTools
 {
@@ -31,22 +31,18 @@ namespace UnityTools
             if (header.compressionType != 0)
             {
                 classTablePos = 0;
-                MemoryStream ms;
+                var compressedBlock = reader.ReadBytes((int)header.compressedSize);
+                var uncompressedSize = (int)header.uncompressedSize;
+                var ms = new MemoryStream();
                 if (header.compressionType == 1) //lz4
                 {
-                    var uncompressedBytes = new byte[header.uncompressedSize];
-                    using (var tempMs = new MemoryStream(reader.ReadBytes((int)header.compressedSize)))
-                    {
-                        var decoder = new Lz4DecoderStream(tempMs);
-                        decoder.Read(uncompressedBytes, 0, (int)header.uncompressedSize);
-                        decoder.Dispose();
-                    }
-                    ms = new MemoryStream(uncompressedBytes);
+                    var decompressedBlock = Lz4Helper.Decompress(compressedBlock, uncompressedSize);
+                    ms = new MemoryStream(decompressedBlock);
                 }
                 else if (header.compressionType == 2) //lzma
                 {
-                    using var tempMs = new MemoryStream(reader.ReadBytes((int)header.compressedSize));
-                    ms = SevenZipHelper.StreamDecompress(tempMs);
+                    using var tempMs = new MemoryStream(compressedBlock);
+                    LzmaHelper.DecompressStream(tempMs, ms);
                 }
                 else
                 {

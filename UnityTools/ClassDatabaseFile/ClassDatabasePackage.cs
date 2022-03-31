@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityTools.Compression.LZ4;
 using System.IO;
 using System.Text;
-using SevenZip.Compression.LZMA;
+using UnityTools.Compression;
 
 namespace UnityTools
 {
@@ -44,23 +43,17 @@ namespace UnityTools
                     firstFile = 0;
                     var compressedSize = (int)(header.stringTableOffset - newReader.Position);
                     var uncompressedSize = (int)header.fileBlockSize;
-                    MemoryStream ms;
+                    var compressedBlock = newReader.ReadBytes(compressedSize);
+                    var ms = new MemoryStream();
                     if ((header.compressionType & 0x1f) == 1) //lz4
                     {
-                        var uncompressedBytes = new byte[uncompressedSize];
-                        using (var tempMs = new MemoryStream(newReader.ReadBytes(compressedSize)))
-                        {
-                            var decoder = new Lz4DecoderStream(tempMs);
-                            decoder.Read(uncompressedBytes, 0, uncompressedSize);
-                            decoder.Dispose();
-                        }
-                        ms = new MemoryStream(uncompressedBytes);
+                        var decompressedBlock = Lz4Helper.Decompress(compressedBlock, uncompressedSize);
+                        ms = new MemoryStream(decompressedBlock);
                     }
                     else if ((header.compressionType & 0x1f) == 2) //lzma
                     {
-                        var dbg = newReader.ReadBytes(compressedSize);
-                        using var tempMs = new MemoryStream(dbg);
-                        ms = SevenZipHelper.StreamDecompress(tempMs, uncompressedSize);
+                        using var tempMs = new MemoryStream(compressedBlock);
+                        LzmaHelper.DecompressStream(tempMs, ms, uncompressedSize);
                     }
                     else
                     {
@@ -91,27 +84,25 @@ namespace UnityTools
             {
                 var compressedSize = (int)header.stringTableLenCompressed;
                 var uncompressedSize = (int)header.stringTableLenUncompressed;
-                MemoryStream ms;
-                if ((header.compressionType & 0x1f) == 1) //lz4
+                var compressedBlock = newReader.ReadBytes(compressedSize);
+                var ms = new MemoryStream();
+                switch (header.compressionType & 0x1f) //lz4
                 {
-                    var uncompressedBytes = new byte[uncompressedSize];
-                    using (var tempMs = new MemoryStream(newReader.ReadBytes(compressedSize)))
-                    {
-                        var decoder = new Lz4DecoderStream(tempMs);
-                        decoder.Read(uncompressedBytes, 0, uncompressedSize);
-                        decoder.Dispose();
-                    }
-                    ms = new MemoryStream(uncompressedBytes);
-                }
-                else if ((header.compressionType & 0x1f) == 2) //lzma
-                {
-                    using var tempMs = new MemoryStream(newReader.ReadBytes(compressedSize));
-                    ms = SevenZipHelper.StreamDecompress(tempMs, uncompressedSize);
-                }
-                else
-                {
-                    valid = false;
-                    return valid;
+                    case 1:
+                        {
+                            var decompressedBlock = Lz4Helper.Decompress(compressedBlock, uncompressedSize);
+                            ms = new MemoryStream(decompressedBlock);
+                            break;
+                        }
+                    case 2:
+                        {
+                            using var tempMs = new MemoryStream(compressedBlock);
+                            LzmaHelper.DecompressStream(tempMs, ms, uncompressedSize);
+                            break;
+                        }
+                    default:
+                        valid = false;
+                        return valid;
                 }
 
                 newReader = new AssetsFileReader(ms)
@@ -201,12 +192,12 @@ namespace UnityTools
                 {
                     if ((compress & 0x1f) == 1) //lz4
                     {
-                        var compressedBlock = LZ4Codec.Encode32HC(cldbMs.ToArray(), 0, (int)cldbMs.Length);
+                        var compressedBlock = Lz4Helper.Compress(cldbMs.ToArray());
                         writer.Write(compressedBlock);
                     }
                     else if ((compress & 0x1f) == 2) //lzma
                     {
-                        var compressedBlock = SevenZipHelper.Compress(cldbMs.ToArray());
+                        var compressedBlock = LzmaHelper.Compress(cldbMs.ToArray());
                         writer.Write(compressedBlock);
                     }
                     else
@@ -216,7 +207,7 @@ namespace UnityTools
                 }
                 else //write normally
                 {
-                    cldbMs.CopyToCompat(writer.BaseStream);
+                    cldbMs.CopyTo(writer.BaseStream);
                 }
             }
 
@@ -230,15 +221,15 @@ namespace UnityTools
             {
                 if ((compress & 0x1f) == 1) //lz4
                 {
-                    stringTableBytes = LZ4Codec.Encode32HC(stringTableBytes, 0, stringTableBytes.Length);
+                    stringTableBytes = Lz4Helper.Compress(stringTableBytes);
                 }
                 else if ((compress & 0x1f) == 2) //lzma
                 {
-                    stringTableBytes = SevenZipHelper.Compress(stringTableBytes);
+                    stringTableBytes = LzmaHelper.Compress(stringTableBytes);
                 }
                 else
                 {
-                    throw new ArgumentException("File marked as compressed but no valid compression option set!");
+                    throw new ArgumentException("File marked as compressed, but no valid compression option set!");
                 }
             }
 
