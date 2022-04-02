@@ -46,7 +46,7 @@
             this.programName.Name = "programName";
             this.programName.Size = new System.Drawing.Size(355, 25);
             this.programName.TabIndex = 0;
-            this.programName.Text = "Unity Assets Advanced Editor v1.2";
+            this.programName.Text = "Unity Assets Advanced Editor v1.3";
             // 
             // shortDescription
             // 
