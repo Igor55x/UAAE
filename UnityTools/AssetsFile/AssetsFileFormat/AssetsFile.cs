@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UnityTools.Utils;
 
 namespace UnityTools
 {
@@ -37,18 +38,18 @@ namespace UnityTools
             
             AssetCount = reader.ReadUInt32();
             reader.Align();
-            AssetTablePos = (uint)reader.BaseStream.Position;
+            AssetTablePos = (uint)reader.Position;
 
             var assetInfoSize = AssetFileInfo.GetSize(header.Version);
             if (0x0F <= header.Version && header.Version <= 0x10)
             {
                 //for these two versions, the asset info is not aligned
                 //for the last entry, so we have to do some weird stuff
-                reader.BaseStream.Position += ((assetInfoSize + 3) >> 2 << 2) * (AssetCount - 1) + assetInfoSize;
+                reader.Position += ((assetInfoSize + 3) >> 2 << 2) * (AssetCount - 1) + assetInfoSize;
             }
             else
             {
-                reader.BaseStream.Position += assetInfoSize * AssetCount;
+                reader.Position += assetInfoSize * AssetCount;
             }
             if (header.Version > 0x0B)
             {
@@ -221,7 +222,7 @@ namespace UnityTools
                 {
                     var oldAssetInfo = oldAssetInfosByPathId[newAssetInfo.index];
                     reader.Position = header.DataOffset + oldAssetInfo.curFileOffset;
-                    reader.BaseStream.CopyTo(writer.BaseStream, (int)oldAssetInfo.curFileSize);
+                    reader.BaseStream.CopyToCompat(writer.BaseStream, (int)oldAssetInfo.curFileSize);
                 }
 
                 newAssetInfo.curFileSize = (uint)(writer.Position - (newDataOffset + newAssetInfo.curFileOffset));

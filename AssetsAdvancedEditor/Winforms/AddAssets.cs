@@ -39,14 +39,13 @@ namespace AssetsAdvancedEditor.Winforms
         private long GetLastPathId()
         {
             var fileId = cboxFileID.SelectedIndex;
-            var lastId = Workspace.LoadedFiles[fileId].table.Info.Max(i => i.index);
+            var fileInst = Workspace.LoadedFiles[fileId];
+            var lastId = fileInst.table.Info.Max(i => i.index);
 
-            if (Workspace.NewAssets.Count == 0)
+            if (!Workspace.Modified)
                 return lastId;
 
-            var newAssetsLastId = Workspace.NewAssets
-                .Where(i => i.Value.GetFileID() == fileId)
-                .Max(j => j.Key.pathID);
+            var newAssetsLastId = Workspace.NewReplacers[fileId].Max(r => r.GetPathID());
             return lastId > newAssetsLastId ? lastId : newAssetsLastId;
         }
 

@@ -120,31 +120,9 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void AddAssetItems(List<AssetItem> items)
         {
-            var cldb = Am.classFile;
             for (var i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                var name = item.Name;
-                var typeId = item.TypeID;
-
-                if (string.IsNullOrEmpty(name))
-                {
-                    name = "Unnamed asset";
-                }
-                else if (typeId is AssetClassID.GameObject or AssetClassID.MonoBehaviour)
-                {
-                    name = $"{item.Type} {name}";
-                }
-
-                var cldbType = AssetHelper.FindAssetClassByID(cldb, typeId);
-                if (!HasAnyField(cldbType))
-                    name = $"{item.Type} {name}";
-
-                if (!HasName(cldb, cldbType))
-                    name = "Unnamed asset";
-
-                item.ListName = name;
-                item.SetSubItems();
                 assetList.Items.Insert(0, item);
                 item.Selected = true;
             }
@@ -190,23 +168,22 @@ namespace AssetsAdvancedEditor.Winforms
 
         private List<AssetTypeValueField> GetSelectedFields()
         {
-            //try
-            //{
+            try
+            {
                 var selectedFields = new List<AssetTypeValueField>(GetSelectedCount());
                 foreach (int index in assetList.SelectedIndices)
                 {
                     var baseField = Workspace.GetBaseField((AssetItem)assetList.Items[index]);
                     selectedFields.Add(baseField);
                 }
-
                 return selectedFields;
-            //}
-            //catch
-            //{
-            //    MsgBoxUtils.ShowErrorDialog("Unable to process the asset data!\n" +
-            //            "This might be due to an incompatible type database.");
-            //    return null;
-            //}
+            }
+            catch
+            {
+                MsgBoxUtils.ShowErrorDialog("Unable to process the asset data!\n" +
+                        "This might be due to an incompatible type database.");
+                return null;
+            }
         }
 
         private void SelectModifiedAssets()
@@ -498,15 +475,15 @@ namespace AssetsAdvancedEditor.Winforms
             var sfd = new SaveFileDialog
             {
                 Title = @"Save dump",
-                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json|UAAE xml dump (*.xml)|*.xml",
+                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE xml dump (*.xml)|*.xml|UAAE json dump (*.json)|*.json",
                 FileName = $"{name}-{selectedItem.Cont.FileInstance.name}-{selectedItem.PathID}-{selectedItem.Type}"
             };
             if (sfd.ShowDialog() != DialogResult.OK) return;
             var dumpType = sfd.FilterIndex switch
             {
                 1 => DumpType.TXT,
-                2 => DumpType.JSON,
-                3 => DumpType.XML,
+                2 => DumpType.XML,
+                3 => DumpType.JSON,
                 _ => DumpType.TXT
             };
             AssetExporter.ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
@@ -602,11 +579,11 @@ namespace AssetsAdvancedEditor.Winforms
                     case ".txt":
                         dumpType = DumpType.TXT;
                         break;
-                    case ".json":
-                        dumpType = DumpType.JSON;
-                        break;
                     case ".xml":
                         dumpType = DumpType.XML;
+                        break;
+                    case ".json":
+                        dumpType = DumpType.JSON;
                         break;
                     default:
                         continue;
@@ -622,14 +599,14 @@ namespace AssetsAdvancedEditor.Winforms
             var ofd = new OpenFileDialog
             {
                 Title = @"Import dump",
-                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE json dump (*.json)|*.json|UAAE xml dump (*.xml)|*.xml"
+                Filter = @"UAAE text dump (*.txt)|*.txt|UAAE xml dump (*.xml)|*.xml|UAAE json dump (*.json)|*.json"
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
             var dumpType = ofd.FilterIndex switch
             {
                 1 => DumpType.TXT,
-                2 => DumpType.JSON,
-                3 => DumpType.XML,
+                2 => DumpType.XML,
+                3 => DumpType.JSON,
                 _ => DumpType.TXT
             };
             var replacer = AssetImporter.ImportDump(ofd.FileName, selectedItem, dumpType);

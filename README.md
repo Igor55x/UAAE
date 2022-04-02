@@ -24,8 +24,8 @@ UAAE isn't so `advanced` because it is still missing a lot of features and may h
 * Raw export/import
 * Dump export/import in
   * TXT format
-  * JSON format
   * XML format
+  * JSON format
 * Save modified assets files and bundle file
 * Command line support (beta)
 * Plugin support

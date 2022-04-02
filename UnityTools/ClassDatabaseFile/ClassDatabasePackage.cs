@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityTools.Compression;
+using UnityTools.Utils;
 
 namespace UnityTools
 {
@@ -207,7 +208,7 @@ namespace UnityTools
                 }
                 else //write normally
                 {
-                    cldbMs.CopyTo(writer.BaseStream);
+                    cldbMs.CopyToCompat(writer.BaseStream);
                 }
             }
 

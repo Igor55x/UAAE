@@ -6,6 +6,7 @@ using AssetsAdvancedEditor.Plugins;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 using Mono.Cecil;
+using System.Linq;
 
 namespace AssetsAdvancedEditor.Assets
 {
@@ -71,22 +72,33 @@ namespace AssetsAdvancedEditor.Assets
 
             NewAssets[assetId] = replacer;
 
-            if (NewReplacers.ContainsKey(fileId))
-            {
-                NewReplacers[fileId].Add(replacer);
-            }
-            else
-            {
-                NewReplacers.Add(fileId, new List<AssetsReplacer> { replacer });
-            }
-
+            // Make stream to use as a replacement to the one from file
             if (previewStream == null)
             {
                 var newStream = new MemoryStream();
                 var newWriter = new AssetsFileWriter(newStream);
                 replacer.Write(newWriter);
-                newStream.Seek(0, SeekOrigin.Begin);
+                newStream.Position = 0;
                 previewStream = newStream;
+            }
+
+            if (NewReplacers.ContainsKey(fileId))
+            {
+                for (var i = 0; i < NewReplacers[fileId].Count; i++)
+                {
+                    if (NewReplacers[fileId][i].GetPathID() == replacer.GetPathID())
+                    {
+                        NewReplacers[fileId][i] = replacer;
+                    }
+                    else
+                    {
+                        NewReplacers[fileId].Add(replacer);
+                    }
+                }
+            }
+            else
+            {
+                NewReplacers.Add(fileId, new List<AssetsReplacer> { replacer });
             }
 
             NewAssetDatas[assetId] = previewStream;
@@ -97,10 +109,14 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var reader = new AssetsFileReader(previewStream);
-                item.Position = reader.Position;
-                item.Cont = new AssetContainer(reader, forInstance);
-                UpdateAssetInfo(ref item, replacer);
+                var reader = new AssetsFileReader(previewStream)
+                {
+                    BigEndian = false
+                };
+                var cont = new AssetContainer(reader, forInstance);
+                Extensions.GetAssetItemFast(Am.classFile, cont, replacer, out var newItem);
+                MakeAssetContainer(ref newItem);
+                item.SetSubItems(newItem);
                 LoadedAssets[assetId] = item;
             }
 
@@ -124,17 +140,6 @@ namespace AssetsAdvancedEditor.Assets
             }
 
             Modified = NewAssets.Count != 0;
-        }
-
-        public void UpdateAssetInfo(ref AssetItem item, AssetsReplacer replacer)
-        {
-            if (item == null || replacer == null) return;
-            Extensions.GetAssetNameFast(Am.classFile, item, out _, out var listName, out var name);
-            item.Name = name;
-            item.ListName = listName;
-            item.Size = replacer.GetSize();
-            item.Modified = "*";
-            item.SetSubItems();
         }
 
         public void MakeAssetContainer(ref AssetItem item, bool onlyInfo = false)

@@ -101,11 +101,11 @@ namespace AssetsAdvancedEditor.Assets
                 if (eqSign != -1)
                 {
                     var type = line[typeName..];
-                    type = type.Split()[0];
-
-                    if (type.StartsWith("unsigned"))
+                    var splitType = type.Split();
+                    type = splitType[0];
+                    if (splitType[0] == "unsigned")
                     {
-                        type = $"unsigned {type.Split()[1]}";
+                        type = $"unsigned {splitType[1]}";
                     }
 
                     var success = WriteData(type, valueStr);

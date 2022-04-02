@@ -175,7 +175,7 @@ namespace UnityTools
                         var startPos = writer.Position;
 
                         Reader.Position = Header.GetFileDataOffset() + originalInfo.Offset;
-                        Reader.BaseStream.CopyTo(writer.BaseStream, (int)originalInfo.DecompressedSize);
+                        Reader.BaseStream.CopyToCompat(writer.BaseStream, (int)originalInfo.DecompressedSize);
 
                         dirInfo.Offset = startPos - assetDataPos;
                     }
@@ -464,7 +464,7 @@ namespace UnityTools
                         newBlocks.Add(blockInfo);
 
                         if (blockInfoAtEnd)
-                            bundleDataStream.CopyTo(writer.BaseStream);
+                            bundleDataStream.CopyToCompat(writer.BaseStream);
                         else
                             newStreams.Add(bundleDataStream);
                         break;
@@ -495,7 +495,7 @@ namespace UnityTools
                 foreach (var newStream in newStreams)
                 {
                     newStream.Position = 0;
-                    newStream.CopyTo(writer.BaseStream);
+                    newStream.CopyToCompat(writer.BaseStream);
                     newStream.Close();
                 }
             }

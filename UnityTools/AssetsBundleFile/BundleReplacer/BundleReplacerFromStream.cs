@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using UnityTools.Utils;
 
 namespace UnityTools
 {
@@ -48,7 +49,7 @@ namespace UnityTools
         public override long Write(AssetsFileWriter writer)
         {
             stream.Position = offset;
-            stream.CopyTo(writer.BaseStream, (int)size);
+            stream.CopyToCompat(writer.BaseStream, (int)size);
             return writer.Position;
         }
 

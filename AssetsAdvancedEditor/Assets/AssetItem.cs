@@ -20,6 +20,7 @@ namespace AssetsAdvancedEditor.Assets
 
         public void SetSubItems()
         {
+            SubItems.Clear();
             Text = ListName;
             SubItems.AddRange(new[]
             {
@@ -30,6 +31,23 @@ namespace AssetsAdvancedEditor.Assets
                 PathID.ToString(),
                 Size.ToString(),
                 Modified
+            });
+        }
+
+        public void SetSubItems(AssetItem other)
+        {
+            SubItems.Clear();
+            Text = other.ListName;
+            Cont = other.Cont;
+            SubItems.AddRange(new[]
+            {
+                other.Container,
+                other.Type,
+                ((int)other.TypeID).ToString(),
+                other.FileID.ToString(),
+                other.PathID.ToString(),
+                other.Size.ToString(),
+                other.Modified
             });
         }
 

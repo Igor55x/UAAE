@@ -171,127 +171,159 @@ namespace AssetsAdvancedEditor.Utils
             }
         }
 
-        public static void GetAssetNameFast(ClassDatabaseFile cldb, AssetItem item, out string type, out string listName, out string name)
+        public static void GetAssetItemFast(ClassDatabaseFile cldb, AssetContainer cont, AssetsReplacer replacer, out AssetItem item)
         {
-            var cont = item.Cont;
             var file = cont.FileInstance.file;
-            var classId = item.TypeID;
+            var classId = replacer.GetClassID();
             var cldbType = AssetHelper.FindAssetClassByID(cldb, classId);
             var reader = cont.FileReader;
-            name = "";
-            listName = "Unnamed asset";
+            string name;
+            string type;
+
+            const string container = "";
+            var fileId = replacer.GetFileID();
+            var pathId = replacer.GetPathID();
+            const string modified = "*";
+            var monoId = ushort.MaxValue;
+
+            if (classId is AssetClassID.MonoBehaviour)
+            {
+                monoId = replacer.GetMonoScriptID();
+            }
+
+            item = new AssetItem
+            {
+                Cont = cont,
+                ListName = "Unnamed asset",
+                Container = container,
+                TypeID = classId,
+                FileID = fileId,
+                PathID = pathId,
+                Size = replacer.GetSize(),
+                Modified = modified,
+                Position = 0L,
+                MonoID = monoId
+            };
 
             if (file.typeTree.hasTypeTree)
             {
                 var ttType = classId is AssetClassID.MonoBehaviour ?
-                    AssetHelper.FindTypeTreeTypeByScriptIndex(file.typeTree, item.MonoID) :
+                    AssetHelper.FindTypeTreeTypeByScriptIndex(file.typeTree, monoId) :
                     AssetHelper.FindTypeTreeTypeByID(file.typeTree, classId);
 
                 type = ttType.Children[0].GetTypeString(ttType.stringTable);
+                item.Type = type;
                 switch (ttType.Children.Length)
                 {
                     case > 1 when ttType.Children[1].GetNameString(ttType.stringTable) == "m_Name":
-                    {
-                        reader.Position = item.Position;
-                        name = reader.ReadCountStringInt32();
-                        if (name != "")
                         {
-                            listName = name;
-                            return;
+                            reader.Position = item.Position;
+                            name = reader.ReadCountStringInt32();
+                            item.Name = name;
+                            if (name != "")
+                            {
+                                item.ListName = name;
+                                return;
+                            }
+                            break;
                         }
-                        break;
-                    }
                     default:
-                    {
-                        switch (type)
                         {
-                            case "GameObject":
+                            switch (type)
                             {
-                                reader.Position = item.Position;
-                                var size = reader.ReadInt32();
-                                var componentSize = file.header.Version > 0x10 ? 0x0c : 0x10;
-                                reader.Position += size * componentSize;
-                                reader.Position += 0x04;
-                                name = reader.ReadCountStringInt32();
-                                if (name != "")
-                                {
-                                    listName = $"{type} {name}";
-                                }
-                                return;
+                                case "GameObject":
+                                    {
+                                        reader.Position = item.Position;
+                                        var size = reader.ReadInt32();
+                                        var componentSize = file.header.Version > 0x10 ? 0x0c : 0x10;
+                                        reader.Position += size * componentSize;
+                                        reader.Position += 0x04;
+                                        name = reader.ReadCountStringInt32();
+                                        item.Name = name;
+                                        if (name != "")
+                                        {
+                                            item.ListName = $"{type} {name}";
+                                        }
+                                        return;
+                                    }
+                                case "MonoBehaviour":
+                                    {
+                                        reader.Position = item.Position;
+                                        reader.Position += 0x1c;
+                                        name = reader.ReadCountStringInt32();
+                                        item.Name = name;
+                                        if (name != "")
+                                        {
+                                            item.ListName = $"{type} {name}";
+                                        }
+                                        return;
+                                    }
                             }
-                            case "MonoBehaviour":
-                            {
-                                reader.Position = item.Position;
-                                reader.Position += 0x1c;
-                                name = reader.ReadCountStringInt32();
-                                if (name != "")
-                                {
-                                    listName = $"{type} {name}";
-                                }
-                                return;
-                            }
+                            break;
                         }
-                        break;
-                    }
                 }
                 return;
             }
 
             if (cldbType == null)
             {
-                type = $"0x{classId:X8}";
+                item.Type = $"0x{classId:X8}";
                 return;
             }
 
             type = cldbType.name.GetString(cldb);
+            item.Type = type;
             switch (cldbType.fields.Count)
             {
                 case 0:
-                {
-                    return;
-                }
+                    {
+                        return;
+                    }
                 case > 1 when cldbType.fields[1].fieldName.GetString(cldb) == "m_Name":
-                {
-                    reader.Position = item.Position;
-                    name = reader.ReadCountStringInt32();
-                    if (name != "")
                     {
-                        listName = name;
+                        reader.Position = item.Position;
+                        name = reader.ReadCountStringInt32();
+                        item.Name = name;
+                        if (name != "")
+                        {
+                            item.ListName = name;
+                        }
+                        break;
                     }
-                    break;
-                }
                 default:
-                {
-                    switch (type)
                     {
-                        case "GameObject":
+                        switch (type)
                         {
-                            reader.Position = item.Position;
-                            var size = reader.ReadInt32();
-                            var componentSize = file.header.Version > 0x10 ? 0x0c : 0x10;
-                            reader.Position += size * componentSize;
-                            reader.Position += 0x04;
-                            name = reader.ReadCountStringInt32();
-                            if (name != "")
-                            {
-                                listName = $"{type} {name}";
-                            }
-                            return;
+                            case "GameObject":
+                                {
+                                    reader.Position = item.Position;
+                                    var size = reader.ReadInt32();
+                                    var componentSize = file.header.Version > 0x10 ? 0x0c : 0x10;
+                                    reader.Position += size * componentSize;
+                                    reader.Position += 0x04;
+                                    name = reader.ReadCountStringInt32();
+                                    item.Name = name;
+                                    if (name != "")
+                                    {
+                                        item.ListName = $"{type} {name}";
+                                    }
+                                    return;
+                                }
+                            case "MonoBehaviour":
+                                {
+                                    reader.Position = item.Position;
+                                    reader.Position += 0x1c;
+                                    name = reader.ReadCountStringInt32();
+                                    item.Name = name;
+                                    if (name != "")
+                                    {
+                                        item.ListName = $"{type} {name}";
+                                    }
+                                    return;
+                                }
                         }
-                        case "MonoBehaviour":
-                        {
-                            reader.Position = item.Position;
-                            reader.Position += 0x1c;
-                            name = reader.ReadCountStringInt32();
-                            if (name != "")
-                            {
-                                listName = $"{type} {name}";
-                            }
-                            return;
-                        }
+                        break;
                     }
-                    break;
-                }
             }
         }
 
