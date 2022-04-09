@@ -4,10 +4,21 @@
     {
         public int fileID;
         public long pathID;
-        public AssetPPtr(int fileID, long pathID)
+
+        public void Read(EndianReader reader)
         {
-            this.fileID = fileID;
-            this.pathID = pathID;
+            fileID = reader.ReadInt32();
+            reader.Align();
+            pathID = reader.ReadInt64();
+            reader.Align();
+        }
+
+        public void Write(EndianWriter writer)
+        {
+            writer.Write(fileID);
+            writer.Align();
+            writer.Write(pathID);
+            writer.Align();
         }
     }
 }

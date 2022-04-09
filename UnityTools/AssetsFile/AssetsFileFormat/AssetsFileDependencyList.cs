@@ -6,7 +6,7 @@ namespace UnityTools
     {
         public int dependencyCount;
         public List<AssetsFileDependency> dependencies;
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             dependencyCount = reader.ReadInt32();
             dependencies = new List<AssetsFileDependency>();
@@ -18,7 +18,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.Write(dependencyCount);
             for (var i = 0; i < dependencyCount; i++)

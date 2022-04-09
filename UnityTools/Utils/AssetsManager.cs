@@ -463,7 +463,7 @@ namespace UnityTools
         public ClassDatabaseFile LoadClassDatabase(Stream stream)
         {
             classFile = new ClassDatabaseFile();
-            classFile.Read(new AssetsFileReader(stream));
+            classFile.Read(new EndianReader(stream, true));
             return classFile;
         }
 
@@ -557,7 +557,7 @@ namespace UnityTools
         public ClassDatabasePackage LoadClassPackage(Stream stream)
         {
             classPackage = new ClassDatabasePackage();
-            classPackage.Read(new AssetsFileReader(stream));
+            classPackage.Read(new EndianReader(stream, true));
             return classPackage;
         }
 

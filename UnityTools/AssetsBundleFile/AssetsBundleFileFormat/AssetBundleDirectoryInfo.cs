@@ -7,7 +7,7 @@
         public uint Flags;
         public string Name;
 
-        public void Read(AssetsFileReader reader, uint version)
+        public void Read(EndianReader reader, uint version)
         {
             if (version >= 6)
             {
@@ -24,7 +24,7 @@
             }
         }
 
-        public void Write(AssetsFileWriter writer, uint version)
+        public void Write(EndianWriter writer, uint version)
         {
             if (version >= 6)
             {

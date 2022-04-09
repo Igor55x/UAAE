@@ -100,14 +100,14 @@ namespace UnityTools
             return true;
         }
 
-        public override long Write(AssetsFileWriter writer)
+        public override long Write(EndianWriter writer)
         {
             stream.Position = offset;
             stream.CopyToCompat(writer.BaseStream, (int)size);
             return writer.Position;
         }
 
-        public override long WriteReplacer(AssetsFileWriter writer)
+        public override long WriteReplacer(EndianWriter writer)
         {
             writer.Write((short)2); //replacer type
             writer.Write((byte)1); //file type (0 bundle, 1 assets)

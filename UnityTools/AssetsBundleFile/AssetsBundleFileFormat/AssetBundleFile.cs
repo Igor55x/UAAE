@@ -12,11 +12,11 @@ namespace UnityTools
         public AssetBundleHeader Header;
         public AssetBundleMetadata Metadata;
 
-        public AssetsFileReader Reader;
+        public EndianReader Reader;
 
         public void Close() => Reader.Close();
 
-        public bool Read(AssetsFileReader reader, bool allowCompressed = false)
+        public bool Read(EndianReader reader, bool allowCompressed = false)
         {
             Reader = reader;
             Header = new AssetBundleHeader();
@@ -36,7 +36,7 @@ namespace UnityTools
             return true;
         }
 
-        public bool Write(AssetsFileWriter writer, List<BundleReplacer> replacers, ClassDatabaseFile typeMeta = null)
+        public bool Write(EndianWriter writer, List<BundleReplacer> replacers, ClassDatabaseFile typeMeta = null)
         {
             Header.Write(writer);
             var newMetadata = new AssetBundleMetadata
@@ -210,7 +210,7 @@ namespace UnityTools
             return true;
         }
 
-        public bool Unpack(AssetsFileReader reader, AssetsFileWriter writer)
+        public bool Unpack(EndianReader reader, EndianWriter writer)
         {
             reader.Position = 0;
             if (Read(reader, true))
@@ -242,7 +242,7 @@ namespace UnityTools
                 }
                 if (Header.GetCompressionType() != 0)
                 {
-                    using var memReader = new AssetsFileReader(blocksInfoStream)
+                    using var memReader = new EndianReader(blocksInfoStream, true)
                     {
                         Position = 0
                     };
@@ -272,28 +272,30 @@ namespace UnityTools
                 newBundleInf6.BlocksInfo = new AssetBundleBlockInfo[newBundleInf6.BlockCount];
                 for (var i = 0; i < newBundleInf6.BlockCount; i++)
                 {
+                    var blockInfo = Metadata.BlocksInfo[i];
                     newBundleInf6.BlocksInfo[i] = new AssetBundleBlockInfo
                     {
-                        CompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
-                        DecompressedSize = Metadata.BlocksInfo[i].DecompressedSize,
-                        Flags = (ushort)(Metadata.BlocksInfo[i].Flags & 0xC0) //set compression to none
+                        CompressedSize = blockInfo.DecompressedSize,
+                        DecompressedSize = blockInfo.DecompressedSize,
+                        Flags = (ushort)(blockInfo.Flags & 0xC0) //set compression to none
                     };
                 }
                 newBundleInf6.DirectoryInfo = new AssetBundleDirectoryInfo[newBundleInf6.DirectoryCount];
                 for (var i = 0; i < newBundleInf6.DirectoryCount; i++)
                 {
+                    var dirInfo = Metadata.DirectoryInfo[i];
                     newBundleInf6.DirectoryInfo[i] = new AssetBundleDirectoryInfo
                     {
-                        Offset = Metadata.DirectoryInfo[i].Offset,
-                        DecompressedSize = Metadata.DirectoryInfo[i].DecompressedSize,
-                        Flags = Metadata.DirectoryInfo[i].Flags,
-                        Name = Metadata.DirectoryInfo[i].Name
+                        Offset = dirInfo.Offset,
+                        DecompressedSize = dirInfo.DecompressedSize,
+                        Flags = dirInfo.Flags,
+                        Name = dirInfo.Name
                     };
                 }
                 newBundleHeader6.Write(writer);
                 if (newBundleHeader6.Version >= 7)
                 {
-                    writer.Align16();
+                    writer.Align(16);
                 }
                 newBundleInf6.Write(Header, writer);
 
@@ -324,7 +326,7 @@ namespace UnityTools
             return false;
         }
 
-        public bool Pack(AssetsFileReader reader, AssetsFileWriter writer, AssetBundleCompressionType compType)
+        public bool Pack(EndianReader reader, EndianWriter writer, AssetBundleCompressionType compType)
         {
             reader.Position = 0;
             writer.Position = 0;
@@ -358,7 +360,7 @@ namespace UnityTools
 
             newHeader.Write(writer);
             if (newHeader.Version >= 7)
-                writer.Align16();
+                writer.Align(16);
 
             var headerSize = (int)(writer.Position - startPos);
 
@@ -476,7 +478,7 @@ namespace UnityTools
             byte[] blocksInfo;
             using (var memStream = new MemoryStream())
             {
-                var infoWriter = new AssetsFileWriter(memStream);
+                var infoWriter = new EndianWriter(memStream, true);
                 newMetadata.Write(Header, infoWriter);
                 blocksInfo = memStream.ToArray();
             }
@@ -507,7 +509,7 @@ namespace UnityTools
             writer.Position = 0;
             newHeader.Write(writer);
             if (newHeader.Version >= 7)
-                writer.Align16();
+                writer.Align(16);
 
             return true;
         }

@@ -6,7 +6,6 @@ using AssetsAdvancedEditor.Plugins;
 using AssetsAdvancedEditor.Utils;
 using UnityTools;
 using Mono.Cecil;
-using System.Linq;
 
 namespace AssetsAdvancedEditor.Assets
 {
@@ -76,7 +75,7 @@ namespace AssetsAdvancedEditor.Assets
             if (previewStream == null)
             {
                 var newStream = new MemoryStream();
-                var newWriter = new AssetsFileWriter(newStream);
+                var newWriter = new EndianWriter(newStream, true);
                 replacer.Write(newWriter);
                 newStream.Position = 0;
                 previewStream = newStream;
@@ -109,10 +108,7 @@ namespace AssetsAdvancedEditor.Assets
             }
             else
             {
-                var reader = new AssetsFileReader(previewStream)
-                {
-                    BigEndian = false
-                };
+                var reader = new EndianReader(previewStream);
                 var cont = new AssetContainer(reader, forInstance);
                 Extensions.GetAssetItemFast(Am.classFile, cont, replacer, out var newItem);
                 MakeAssetContainer(ref newItem);

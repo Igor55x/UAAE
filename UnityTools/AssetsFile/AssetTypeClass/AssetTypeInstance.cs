@@ -8,10 +8,10 @@ namespace UnityTools
         public int BaseFieldCount;
         public List<AssetTypeValueField> BaseFields { get; }
 
-        public AssetTypeInstance(AssetTypeTemplateField baseField, AssetsFileReader reader, long filePos)
+        public AssetTypeInstance(AssetTypeTemplateField baseField, EndianReader reader, long filePos)
             : this(new[] { baseField }, reader, filePos) { }
 
-        public AssetTypeInstance(AssetTypeTemplateField[] baseFields, AssetsFileReader reader, long filePos)
+        public AssetTypeInstance(AssetTypeTemplateField[] baseFields, EndianReader reader, long filePos)
         {
             reader.BigEndian = false;
             reader.Position = filePos;
@@ -49,7 +49,7 @@ namespace UnityTools
             return true;
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             for (var i = 0; i < BaseFields.Count; i++)
             {
@@ -60,10 +60,7 @@ namespace UnityTools
         public byte[] WriteToByteArray(bool bigEndian = false)
         {
             using var ms = new MemoryStream();
-            using var writer = new AssetsFileWriter(ms)
-            {
-                BigEndian = bigEndian
-            };
+            using var writer = new EndianWriter(ms, bigEndian);
             Write(writer);
             return ms.ToArray();
         }

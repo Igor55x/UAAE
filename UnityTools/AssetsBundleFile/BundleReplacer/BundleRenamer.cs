@@ -26,16 +26,16 @@
 
         public override long GetSize() => 0;
 
-        public override bool Init(AssetsFileReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null) => true;
+        public override bool Init(EndianReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null) => true;
 
         public override void Uninit()
         {
             return;
         }
 
-        public override long Write(AssetsFileWriter writer) => writer.Position;
+        public override long Write(EndianWriter writer) => writer.Position;
 
-        public override long WriteReplacer(AssetsFileWriter writer)
+        public override long WriteReplacer(EndianWriter writer)
         {
             writer.Write((short)1); //replacer type
             writer.Write((byte)0); //file type (0 bundle, 1 assets)

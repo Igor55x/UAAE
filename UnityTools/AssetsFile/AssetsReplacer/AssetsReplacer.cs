@@ -24,8 +24,8 @@ namespace UnityTools
         public abstract bool AddPreloadDependency(AssetPPtr dependency);
 
         public abstract long GetSize();
-        public abstract long Write(AssetsFileWriter writer);
-        public abstract long WriteReplacer(AssetsFileWriter writer);
+        public abstract long Write(EndianWriter writer);
+        public abstract long WriteReplacer(EndianWriter writer);
 
         public abstract void Dispose();
     }

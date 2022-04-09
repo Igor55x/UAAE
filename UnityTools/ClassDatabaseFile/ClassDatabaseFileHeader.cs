@@ -10,14 +10,15 @@ namespace UnityTools
 
         public byte flags;
         public byte compressionType;
-        public uint compressedSize, uncompressedSize;
+        public uint compressedSize;
+        public uint uncompressedSize;
 
         public byte unityVersionCount;
         public string[] unityVersions;
 
         public uint stringTableLen;
         public uint stringTablePos;
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             reader.BigEndian = false;
             header = reader.ReadStringLength(4);
@@ -55,7 +56,7 @@ namespace UnityTools
             stringTablePos = reader.ReadUInt32();
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.BigEndian = false;
             writer.Write(Encoding.ASCII.GetBytes(header));

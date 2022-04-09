@@ -154,7 +154,7 @@ namespace AssetsAdvancedEditor.Winforms
             if (BundleInst == null) return;
 
             using (var fs = File.OpenWrite(path))
-            using (var writer = new AssetsFileWriter(fs))
+            using (var writer = new EndianWriter(fs, true))
             {
                 BundleInst.file.Write(writer, ModifiedFiles.Values.ToList());
             }

@@ -31,7 +31,7 @@
 
         public override long GetSize() => size;
 
-        public override bool Init(AssetsFileReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null)
+        public override bool Init(EndianReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null)
         {
             return true;
         }
@@ -41,13 +41,13 @@
             return;
         }
 
-        public override long Write(AssetsFileWriter writer)
+        public override long Write(EndianWriter writer)
         {
             writer.Write(buffer);
             return writer.Position;
         }
 
-        public override long WriteReplacer(AssetsFileWriter writer)
+        public override long WriteReplacer(EndianWriter writer)
         {
             writer.Write((short)3); //replacer type
             writer.Write((byte)0); //file type (0 bundle, 1 assets)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace UnityTools
 {
@@ -89,7 +88,7 @@ namespace UnityTools
             return true;
         }
 
-        public AssetTypeValueField MakeValue(AssetsFileReader reader)
+        public AssetTypeValueField MakeValue(EndianReader reader)
         {
             var valueField = new AssetTypeValueField
             {
@@ -99,7 +98,7 @@ namespace UnityTools
             return valueField;
         }
 
-        public AssetTypeValueField ReadType(AssetsFileReader reader, AssetTypeValueField valueField)
+        public AssetTypeValueField ReadType(EndianReader reader, AssetTypeValueField valueField)
         {
             if (valueField.TemplateField.isArray)
             {

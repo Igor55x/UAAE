@@ -12,16 +12,16 @@
         public bool fromStringTable;
         public string GetString(ClassDatabaseFile file)
         {
-            return fromStringTable ? AssetsFileReader.ReadNullTerminatedArray(file.stringTable, str.stringTableOffset) : str.@string;
+            return fromStringTable ? EndianReader.ReadNullTerminatedArray(file.stringTable, str.stringTableOffset) : str.@string;
         }
 
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             fromStringTable = true;
             str.stringTableOffset = reader.ReadUInt32();
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.Write(str.stringTableOffset);
             if (!fromStringTable)

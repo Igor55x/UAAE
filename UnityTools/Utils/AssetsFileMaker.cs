@@ -8,7 +8,7 @@ namespace UnityTools.Utils
 		public static byte[] CreateBlankAssets(string engineVersion, List<Type_0D> types)
 		{
             using var ms = new MemoryStream();
-            using var writer = new AssetsFileWriter(ms);
+            using var writer = new EndianWriter(ms, true);
             var header = new AssetsFileHeader
             {
                 MetadataSize = 0,
@@ -16,7 +16,7 @@ namespace UnityTools.Utils
                 Version = 0x11,
                 DataOffset = 0x1000,
                 Endianness = false,
-                Reserved = new byte[] { 0, 0, 0 }
+                Reserved = new byte[3]
             };
 
             var typeTree = new TypeTree()

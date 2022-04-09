@@ -20,7 +20,7 @@ namespace UnityTools
         public int DependencyCount;
         public int[] Dependencies;
 
-        public void Read(bool hasTypeTree, AssetsFileReader reader, uint version)
+        public void Read(bool hasTypeTree, EndianReader reader, uint version)
         {
             ClassID = (AssetClassID)reader.ReadInt32();
             if (version >= 0x10)
@@ -60,7 +60,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(bool hasTypeTree, AssetsFileWriter writer, uint version)
+        public void Write(bool hasTypeTree, EndianWriter writer, uint version)
         {
             writer.Write((int)ClassID);
             if (version >= 0x10)

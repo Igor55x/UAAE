@@ -22,14 +22,14 @@
         //when you have loaded the bundle. except for you can't give the AssetsFile manually, you
         //must give it a reader and position and let it read the AssetsFile for you. strange, but
         //that's just how it works I guess. also the bundle argument seemed useless, so I removed it.
-        public abstract bool Init(AssetsFileReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null);
+        public abstract bool Init(EndianReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null);
 		public abstract void Uninit();
         
-        public abstract long Write(AssetsFileWriter writer);
+        public abstract long Write(EndianWriter writer);
 
-        public abstract long WriteReplacer(AssetsFileWriter writer);
+        public abstract long WriteReplacer(EndianWriter writer);
 
-        public static BundleReplacer ReadBundleReplacer(AssetsFileReader reader)
+        public static BundleReplacer ReadBundleReplacer(EndianReader reader)
         {
             return null;
         }

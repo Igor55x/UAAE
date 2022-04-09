@@ -12,7 +12,7 @@ namespace UnityTools
         public uint fileBlockSize;
         public uint fileCount;
         public List<ClassDatabaseFileRef> files;
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             reader.BigEndian = false;
             magic = reader.ReadStringLength(4);
@@ -37,7 +37,7 @@ namespace UnityTools
                 });
             }
         }
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.BigEndian = false;
             writer.Write(Encoding.ASCII.GetBytes(magic));

@@ -59,7 +59,7 @@ namespace AssetsAdvancedEditor.Winforms
         private static void CompressBundle(BundleFileInstance bundleInst, string path, AssetBundleCompressionType compType)
         {
             using var fs = File.OpenWrite(path);
-            using var writer = new AssetsFileWriter(fs);
+            using var writer = new EndianWriter(fs, true);
             bundleInst.file.Pack(bundleInst.file.Reader, writer, compType);
         }
     }

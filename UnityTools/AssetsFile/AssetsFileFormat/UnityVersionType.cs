@@ -6,36 +6,36 @@
 	public enum UnityVersionType
 	{
 		/// <summary>
-		/// Alpha version (a)
+		/// Alpha version 'a'
 		/// </summary>
 		Alpha = 0,
 		/// <summary>
-		/// Beta version (b)
+		/// Beta version 'b'
 		/// </summary>
 		Beta,
 		/// <summary>
-		/// China version (c)
+		/// China version 'c'
 		/// </summary>
 		China,
 		/// <summary>
-		/// Final version (f)
+		/// Final version 'f'
 		/// </summary>
 		Final,
 		/// <summary>
-		/// Patch version (p)
+		/// Patch version 'p'
 		/// </summary>
 		Patch,
 		/// <summary>
-		/// Experimental version (x)
+		/// Experimental version 'x'
 		/// </summary>
 		Experimental,
 
 		/// <summary>
-		/// The minimum valid value for this enumeration
+		/// The minimum valid value for <see cref="UnityVersionType"/>
 		/// </summary>
 		MinValue = Alpha,
 		/// <summary>
-		/// The maximum valid value for this enumeration
+		/// The maximum valid value for <see cref="UnityVersionType"/>
 		/// </summary>
 		MaxValue = Experimental
 	}

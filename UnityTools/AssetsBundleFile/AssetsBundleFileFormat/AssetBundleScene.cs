@@ -9,13 +9,13 @@
         public uint CompressedSize;
         public uint DecompressedSize;
 
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             CompressedSize = reader.ReadUInt32();
             DecompressedSize = reader.ReadUInt32();
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.Write(CompressedSize);
             writer.Write(DecompressedSize);

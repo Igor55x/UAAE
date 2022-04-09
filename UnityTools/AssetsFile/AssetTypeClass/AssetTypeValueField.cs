@@ -79,7 +79,7 @@ namespace UnityTools
 
         public static EnumValueTypes GetValueTypeByTypeName(string type)
         {
-            switch (type.ToLower())
+            switch (type.ToLowerInvariant())
             {
                 case "string":
                     return EnumValueTypes.String;
@@ -128,7 +128,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(AssetsFileWriter writer, int depth = 0)
+        public void Write(EndianWriter writer, int depth = 0)
         {
             if (TemplateField.isArray)
             {
@@ -221,10 +221,7 @@ namespace UnityTools
         public byte[] WriteToByteArray(bool bigEndian = false)
         {
             using var ms = new MemoryStream();
-            using var writer = new AssetsFileWriter(ms)
-            {
-                BigEndian = bigEndian
-            };
+            using var writer = new EndianWriter(ms, bigEndian);
             Write(writer);
             return ms.ToArray();
         }

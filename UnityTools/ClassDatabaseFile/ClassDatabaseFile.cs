@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityTools.Compression;
@@ -15,7 +14,7 @@ namespace UnityTools
 
         public byte[] stringTable;
 
-        public bool Read(AssetsFileReader reader)
+        public bool Read(EndianReader reader)
         {
             header = new ClassDatabaseFileHeader();
             header.Read(reader);
@@ -50,7 +49,7 @@ namespace UnityTools
                     return valid;
                 }
 
-                newReader = new AssetsFileReader(ms)
+                newReader = new EndianReader(ms, true)
                 {
                     BigEndian = false
                 };
@@ -70,7 +69,7 @@ namespace UnityTools
             return valid;
         }
 
-        public void Write(AssetsFileWriter writer, int optimizeStringTable = 1, int compress = 1, bool writeStringTable = true)
+        public void Write(EndianWriter writer, int optimizeStringTable = 1, int compress = 1, bool writeStringTable = true)
         {
             var filePos = writer.BaseStream.Position;
 

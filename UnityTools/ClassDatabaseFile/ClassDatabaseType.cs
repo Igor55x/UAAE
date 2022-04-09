@@ -10,7 +10,7 @@ namespace UnityTools
         public ClassDatabaseFileString assemblyFileName;
 
         public List<ClassDatabaseTypeField> fields;
-        public void Read(AssetsFileReader reader, int version, byte flags)
+        public void Read(EndianReader reader, int version, byte flags)
         {
             classId = (AssetClassID)reader.ReadInt32();
             baseClass = reader.ReadInt32();
@@ -30,7 +30,7 @@ namespace UnityTools
                 fields.Add(cdtf);
             }
         }
-        public void Write(AssetsFileWriter writer, int version, byte flags)
+        public void Write(EndianWriter writer, int version, byte flags)
         {
             writer.Write((int)classId);
             writer.Write(baseClass);

@@ -321,7 +321,7 @@ namespace AssetsAdvancedEditor.Winforms
                     var path = fileInst.path;
                     var tempPath = Path.Combine(Path.GetTempPath(), fileInst.name);
                     using var fs = File.OpenWrite(tempPath);
-                    using var writer = new AssetsFileWriter(fs);
+                    using var writer = new EndianWriter(fs, true);
                     fileInst.file.Write(writer, replacers, 0);
                     Am.UnloadAssetsFile(path);
                     fs.Close();
@@ -343,7 +343,7 @@ namespace AssetsAdvancedEditor.Winforms
                         return;
                     }
                     using var fs = File.OpenWrite(sfd.FileName);
-                    using var writer = new AssetsFileWriter(fs);
+                    using var writer = new EndianWriter(fs, true);
                     fileInst.file.Write(writer, replacers, 0);
                 }
             }
@@ -355,7 +355,7 @@ namespace AssetsAdvancedEditor.Winforms
             foreach (var (fileId, replacers) in Workspace.NewReplacers)
             {
                 var ms = new MemoryStream();
-                var writer = new AssetsFileWriter(ms);
+                var writer = new EndianWriter(ms, true);
                 var fileInst = Workspace.LoadedFiles[fileId];
 
                 fileInst.file.Write(writer, replacers, 0);

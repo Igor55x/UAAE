@@ -10,7 +10,7 @@
             return fileInfs == null ? 0 : (uint) AssetFileInfo.GetSize(version) * sizeFiles + 4;
         }
 
-        public void Read(uint version, AssetsFileReader reader)
+        public void Read(uint version, EndianReader reader)
         {
             sizeFiles = reader.ReadUInt32();
             fileInfs = new AssetFileInfo[sizeFiles];
@@ -21,7 +21,7 @@
             }
         }
 
-        public void Write(uint version, AssetsFileWriter writer)
+        public void Write(uint version, EndianWriter writer)
         {
             writer.Write(sizeFiles);
             for (var i = 0; i < sizeFiles; i++)

@@ -35,21 +35,21 @@ namespace UnityTools
 
         public override long GetSize() => -1; //todo
 
-        public override bool Init(AssetsFileReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null)
+        public override bool Init(EndianReader entryReader, long entryPos, long entrySize, ClassDatabaseFile typeMeta = null)
         {
             if (assetsFile != null)
                 return false;
 
             this.typeMeta = typeMeta;
             var stream = new SegmentStream(entryReader.BaseStream, entryPos, entrySize);
-            var reader = new AssetsFileReader(stream);
+            var reader = new EndianReader(stream, true);
             assetsFile = new AssetsFile(reader);
             return true;
         }
 
         public override void Uninit() => assetsFile.Close();
 
-        public override long Write(AssetsFileWriter writer)
+        public override long Write(EndianWriter writer)
         {
             // Some parts of an assets file need to be aligned to a multiple of 4/8/16 bytes,
             // but for this to work correctly, the start of the file of course needs to be aligned too.
@@ -57,13 +57,13 @@ namespace UnityTools
             // this might not be the case. Therefore wrap the bundle output stream in a SegmentStream
             // which will make it look like the start of the new assets file is at position 0
             var alignedStream = new SegmentStream(writer.BaseStream, writer.Position);
-            var alignedWriter = new AssetsFileWriter(alignedStream);
+            var alignedWriter = new EndianWriter(alignedStream, true);
             assetsFile.Write(alignedWriter, replacers, -1, typeMeta);
             writer.Position = writer.BaseStream.Length;
             return writer.Position;
         }
 
-        public override long WriteReplacer(AssetsFileWriter writer)
+        public override long WriteReplacer(EndianWriter writer)
         {
             writer.Write((short)4); //replacer type
             writer.Write((byte)0); //file type (0 bundle, 1 assets)

@@ -79,14 +79,14 @@ namespace AssetsAdvancedEditor.Assets
                 if (line.StartsWith(" +DIR "))
                 {
                     var dirName = line[6..].Trim();
-                    var files = Directory.GetFiles(dirName, "*", SearchOption.AllDirectories);
+                    var files = Directory.GetFiles(dirName, "*.*", SearchOption.AllDirectories);
                     foreach (var file in files)
                         allPaths.Add(file);
                 }
                 else if (line.StartsWith(" -DIR "))
                 {
                     var dirName = line[6..].Trim();
-                    var files = Directory.GetFiles(dirName, "*", SearchOption.AllDirectories);
+                    var files = Directory.GetFiles(dirName, "*.*", SearchOption.AllDirectories);
                     foreach (var file in files)
                         allPaths.Remove(file);
                 }
@@ -227,7 +227,7 @@ namespace AssetsAdvancedEditor.Assets
                 //file isn't guaranteed here
                 byte[] data;
                 using (var ms = new MemoryStream())
-                using (var writer = new AssetsFileWriter(ms))
+                using (var writer = new EndianWriter(ms, true))
                 {
                     bun.Write(writer, reps);
                     data = ms.ToArray();
@@ -274,7 +274,7 @@ namespace AssetsAdvancedEditor.Assets
         {
             var bun = DecompressBundle(file, null);
             var fs = File.OpenWrite(compFile);
-            using var writer = new AssetsFileWriter(fs);
+            using var writer = new EndianWriter(fs, true);
             bun.Pack(bun.Reader, writer, compType);
         }
 
@@ -294,7 +294,7 @@ namespace AssetsAdvancedEditor.Assets
             var bun = new AssetBundleFile();
 
             var fs = (Stream)File.OpenRead(file);
-            var reader = new AssetsFileReader(fs);
+            var reader = new EndianReader(fs, true);
 
             bun.Read(reader, true);
             if (bun.Header.GetCompressionType() != 0)
@@ -304,14 +304,14 @@ namespace AssetsAdvancedEditor.Assets
                     null => new MemoryStream(),
                     _ => File.Open(decompFile, FileMode.Create, FileAccess.ReadWrite)
                 };
-                var writer = new AssetsFileWriter(nfs);
+                var writer = new EndianWriter(nfs, true);
                 bun.Unpack(reader, writer);
 
                 nfs.Position = 0;
                 fs.Close();
 
                 fs = nfs;
-                reader = new AssetsFileReader(fs);
+                reader = new EndianReader(fs, true);
 
                 bun = new AssetBundleFile();
                 bun.Read(reader);

@@ -40,7 +40,7 @@ namespace UnityTools
         /// Reference type hash???
         /// </summary>
         public ulong RefTypeHash;
-        public void Read(AssetsFileReader reader, uint format)
+        public void Read(EndianReader reader, uint format)
         {
             Version = reader.ReadUInt16();
             Level = reader.ReadByte();
@@ -56,7 +56,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(AssetsFileWriter writer, uint format)
+        public void Write(EndianWriter writer, uint format)
         {
             writer.Write(Version);
             writer.Write(Level);

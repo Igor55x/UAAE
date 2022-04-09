@@ -8,7 +8,7 @@ namespace AssetsAdvancedEditor.Assets
     {
         public AssetsFileInstance FileInstance { get; }
         public AssetTypeInstance TypeInstance { get; }
-        public AssetsFileReader FileReader { get; }
+        public EndianReader FileReader { get; }
         public bool HasInstance => TypeInstance != null;
 
         //Existing assets
@@ -20,7 +20,7 @@ namespace AssetsAdvancedEditor.Assets
         }
 
         //Newly created assets
-        public AssetContainer(AssetsFileReader reader, AssetsFileInstance fileInst, AssetTypeInstance typeInst = null)
+        public AssetContainer(EndianReader reader, AssetsFileInstance fileInst, AssetTypeInstance typeInst = null)
         {
             FileReader = reader;
             FileInstance = fileInst;

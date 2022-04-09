@@ -11,7 +11,7 @@
         public int DirectoryCount;
         public AssetBundleDirectoryInfo[] DirectoryInfo;
 
-        public void Read(AssetBundleHeader header, AssetsFileReader reader)
+        public void Read(AssetBundleHeader header, EndianReader reader)
         {
             Hash = new Hash128(reader);
             if (header.Version >= 6)
@@ -48,7 +48,7 @@
             }
         }
 
-        public void Write(AssetBundleHeader header, AssetsFileWriter writer)
+        public void Write(AssetBundleHeader header, EndianWriter writer)
         {
             Hash.Write(writer);
             if (header.Version >= 6)

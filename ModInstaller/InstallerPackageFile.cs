@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityTools;
+using UnityTools.EndianIO;
 
 namespace ModInstaller
 {
@@ -15,7 +16,7 @@ namespace ModInstaller
         public ClassDatabaseFile addedTypes;
         public List<InstallerPackageAssetsDescription> affectedFiles;
 
-        public bool Read(AssetsFileReader reader, bool prefReplacersInMemory = false)
+        public bool Read(EndianReader reader, bool prefReplacersInMemory = false)
         {
             reader.BigEndian = false;
 
@@ -71,7 +72,7 @@ namespace ModInstaller
             return true;
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.BigEndian = false;
 
@@ -111,7 +112,7 @@ namespace ModInstaller
             }
         }
 
-        private static object ParseReplacer(AssetsFileReader reader, bool prefReplacersInMemory)
+        private static object ParseReplacer(EndianReader reader, bool prefReplacersInMemory)
         {
             var replacerType = reader.ReadInt16();
             var fileType = reader.ReadByte();
@@ -142,96 +143,100 @@ namespace ModInstaller
                 }
                 //AssetsReplacer
                 case 1:
-                {
-                    var hasSerializedData = reader.ReadBoolean();
-                    var fileId = reader.ReadInt32();
-                    var pathId = reader.ReadInt64();
-                    var classId = (AssetClassID)reader.ReadInt32();
-                    var monoScriptIndex = reader.ReadUInt16();
-
-                    var preloadDependencies = new List<AssetPPtr>();
-                    var preloadDependencyCount = reader.ReadInt32();
-                    for (var i = 0; i < preloadDependencyCount; i++)
                     {
-                        var pptr = new AssetPPtr(reader.ReadInt32(), reader.ReadInt64());
-                        preloadDependencies.Add(pptr);
-                    }
+                        var hasSerializedData = reader.ReadBoolean();
+                        var fileId = reader.ReadInt32();
+                        var pathId = reader.ReadInt64();
+                        var classId = (AssetClassID)reader.ReadInt32();
+                        var monoScriptIndex = reader.ReadUInt16();
 
-                    switch (replacerType)
-                    {
-                        //remover
-                        case 0:
+                        var preloadDependencies = new List<AssetPPtr>();
+                        var preloadDependencyCount = reader.ReadInt32();
+                        for (var i = 0; i < preloadDependencyCount; i++)
                         {
-                            var replacer = new AssetsRemover(fileId, pathId, classId, monoScriptIndex);
-                            if (preloadDependencyCount != 0)
-                                replacer.SetPreloadDependencies(preloadDependencies);
-
-                            return replacer;
+                            var pptr = new AssetPPtr()
+                            {
+                                fileID = reader.ReadInt32(),
+                                pathID = reader.ReadInt64()
+                            };
+                            preloadDependencies.Add(pptr);
                         }
-                        //adder/replacer?
-                        case 2:
+
+                        switch (replacerType)
                         {
-                            var propertiesHash = new Hash128(new byte[16]);
-                            var scriptHash = new Hash128(new byte[16]);
-                            ClassDatabaseFile classData = null;
-                            AssetsReplacer replacer;
+                            //remover
+                            case 0:
+                            {
+                                var replacer = new AssetsRemover(fileId, pathId, classId, monoScriptIndex);
+                                if (preloadDependencyCount != 0)
+                                    replacer.SetPreloadDependencies(preloadDependencies);
 
-                            var flag1 = reader.ReadBoolean(); //no idea, couldn't get it to be 1
-                            if (flag1)
-                            {
-                                throw new NotSupportedException("You just found a file with the mysterious flag1 set, send the file to Igor55x");
+                                return replacer;
                             }
+                            //adder/replacer?
+                            case 2:
+                            {
+                                var propertiesHash = new Hash128(new byte[16]);
+                                var scriptHash = new Hash128(new byte[16]);
+                                ClassDatabaseFile classData = null;
+                                AssetsReplacer replacer;
 
-                            var hasPropertiesHash = reader.ReadBoolean();
-                            if (hasPropertiesHash)
-                            {
-                                propertiesHash = new Hash128(reader);
-                            }
+                                var flag1 = reader.ReadBoolean(); //no idea, couldn't get it to be 1
+                                if (flag1)
+                                {
+                                    throw new NotSupportedException("You just found a file with the mysterious flag1 set, send the file to Igor55x");
+                                }
 
-                            var hasScriptHash = reader.ReadBoolean();
-                            if (hasScriptHash)
-                            {
-                                scriptHash = new Hash128(reader);
-                            }
+                                var hasPropertiesHash = reader.ReadBoolean();
+                                if (hasPropertiesHash)
+                                {
+                                    propertiesHash = new Hash128(reader);
+                                }
 
-                            var hasCldb = reader.ReadBoolean();
-                            if (hasCldb)
-                            {
-                                classData = new ClassDatabaseFile();
-                                classData.Read(reader);
-                            }
+                                var hasScriptHash = reader.ReadBoolean();
+                                if (hasScriptHash)
+                                {
+                                    scriptHash = new Hash128(reader);
+                                }
 
-                            var size = reader.ReadInt64();
-                            if (prefReplacersInMemory)
-                            {
-                                var data = reader.ReadBytes((int)size);
-                                replacer = new AssetsReplacerFromMemory(fileId, pathId, classId, monoScriptIndex, data);
-                            }
-                            else
-                            { 
-                                replacer = new AssetsReplacerFromStream(fileId, pathId, classId, monoScriptIndex, reader.BaseStream, reader.Position, size);
-                                reader.Position += size;
-                            }
+                                var hasCldb = reader.ReadBoolean();
+                                if (hasCldb)
+                                {
+                                    classData = new ClassDatabaseFile();
+                                    classData.Read(reader);
+                                }
 
-                            if (hasPropertiesHash)
-                            {
-                                replacer.SetPropertiesHash(propertiesHash);
+                                var size = reader.ReadInt64();
+                                if (prefReplacersInMemory)
+                                {
+                                    var data = reader.ReadBytes((int)size);
+                                    replacer = new AssetsReplacerFromMemory(fileId, pathId, classId, monoScriptIndex, data);
+                                }
+                                else
+                                { 
+                                    replacer = new AssetsReplacerFromStream(fileId, pathId, classId, monoScriptIndex, reader.BaseStream, reader.Position, size);
+                                    reader.Position += size;
+                                }
+
+                                if (hasPropertiesHash)
+                                {
+                                    replacer.SetPropertiesHash(propertiesHash);
+                                }
+                                if (hasScriptHash)
+                                {
+                                    replacer.SetScriptIDHash(scriptHash);
+                                    replacer.SetTypeInfo(classData, null, false); //idk what the last two are supposed to do
+                                }
+                                if (preloadDependencyCount != 0)
+                                {
+                                    replacer.SetPreloadDependencies(preloadDependencies);
+                                }
+                                return replacer;
                             }
-                            if (hasScriptHash)
-                            {
-                                replacer.SetScriptIDHash(scriptHash);
-                                replacer.SetTypeInfo(classData, null, false); //idk what the last two are supposed to do
-                            }
-                            if (preloadDependencyCount != 0)
-                            {
-                                replacer.SetPreloadDependencies(preloadDependencies);
-                            }
-                            return replacer;
                         }
-                    }
 
-                    break;
-                }
+                        break;
+                    }
             }
             return null;
         }

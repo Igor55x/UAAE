@@ -16,7 +16,7 @@ namespace UnityTools
             path = Path.GetFullPath(filePath);
             name = Path.Combine(root, Path.GetFileName(path));
             file = new AssetBundleFile();
-            file.Read(new AssetsFileReader(stream), true);
+            file.Read(new EndianReader(stream, true), true);
             if (file.Header != null && file.Header.GetCompressionType() != 0 && unpackIfPacked)
             {
                 file = BundleHelper.UnpackBundle(file);

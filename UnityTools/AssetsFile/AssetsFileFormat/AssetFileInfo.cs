@@ -21,7 +21,7 @@
             return size;
         }
 
-        public void Read(uint version, AssetsFileReader reader)
+        public void Read(uint version, EndianReader reader)
         {
             reader.Align();
             index = version >= 0x0E ? reader.ReadInt64() : reader.ReadUInt32();
@@ -42,7 +42,7 @@
             }
         }
 
-        public void Write(uint version, AssetsFileWriter writer)
+        public void Write(uint version, EndianWriter writer)
         {
             writer.Align();
             if (version >= 0x0E)

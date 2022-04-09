@@ -46,7 +46,7 @@
             return Version >= 16 ? 0x1C : 0x14;
         }
 
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             MetadataSize = reader.ReadUInt32();
             FileSize = reader.ReadUInt32();
@@ -77,7 +77,7 @@
             FromBundle = reader.ReadUInt32(); //seen as 0x1b in bundles and 0x00 everywhere else
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.BigEndian = true;
             if (Version >= 0x16)

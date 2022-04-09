@@ -22,10 +22,10 @@ namespace UnityTools
         public uint AssetTablePos;
         public uint AssetCount;
 
-        public AssetsFileReader reader;
+        public EndianReader reader;
         public Stream readerPar;
 
-        public AssetsFile(AssetsFileReader reader)
+        public AssetsFile(EndianReader reader)
         {
             this.reader = reader;
             readerPar = reader.BaseStream;
@@ -63,7 +63,7 @@ namespace UnityTools
         
         public void Close() => readerPar.Dispose();
 
-        public void Write(AssetsFileWriter writer, List<AssetsReplacer> replacers, long filePos, ClassDatabaseFile typeMeta = null)
+        public void Write(EndianWriter writer, List<AssetsReplacer> replacers, long filePos, ClassDatabaseFile typeMeta = null)
         {
             if (filePos == -1)
                 filePos = writer.Position;
@@ -203,7 +203,7 @@ namespace UnityTools
                 if (writer.Position % 16 == 0)
                     writer.Position += 16;
                 else
-                    writer.Align16();
+                    writer.Align(16);
             }
 
             var newDataOffset = writer.Position;
@@ -227,7 +227,7 @@ namespace UnityTools
 
                 newAssetInfo.curFileSize = (uint)(writer.Position - (newDataOffset + newAssetInfo.curFileOffset));
                 if (i != newAssetInfos.Count - 1)
-                    writer.Align8();
+                    writer.Align(8);
             }
 
             var newFileSize = writer.Position - filePos;
@@ -260,11 +260,11 @@ namespace UnityTools
 
         public static bool IsAssetsFile(string filePath)
         {
-            using var reader = new AssetsFileReader(filePath);
-            return IsAssetsFile(reader, 0, reader.BaseStream.Length);
+            using var reader = new EndianReader(filePath, true);
+            return IsAssetsFile(reader, 0, reader.Length);
         }
 
-        public static bool IsAssetsFile(AssetsFileReader reader, long offset, long length)
+        public static bool IsAssetsFile(EndianReader reader, long offset, long length)
         {
             //todo - not fully implemented
             if (length < 0x30)
@@ -289,12 +289,12 @@ namespace UnityTools
 
             if (possibleFormat >= 0x16)
             {
-                reader.Position += 0x1c;
+                reader.Position += 0x1C;
             }
 
             var possibleVersion = "";
             char curChar;
-            while (reader.Position < reader.BaseStream.Length && (curChar = (char)reader.ReadByte()) != 0x00)
+            while (reader.Position < reader.Length && (curChar = reader.ReadChar()) != 0x00)
             {
                 possibleVersion += curChar;
                 if (possibleVersion.Length > 0xFF)
@@ -308,14 +308,14 @@ namespace UnityTools
             return emptyVersion == "" && fullVersion.Length > 0;
         }
 
-        ///public bool GetAssetFile(ulong fileInfoOffset, AssetsFileReader reader, AssetFile buf, FileStream readerPar);
-        ///public ulong GetAssetFileOffs(ulong fileInfoOffset, AssetsFileReader reader, FileStream readerPar);
-        ///public bool GetAssetFileByIndex(ulong fileIndex, AssetFile buf, uint size, AssetsFileReader reader, FileStream readerPar);
-        ///public ulong GetAssetFileOffsByIndex(ulong fileIndex, AssetsFileReader reader, FileStream readerPar);
-        ///public bool GetAssetFileByName(string name, AssetFile buf, uint size, AssetsFileReader reader, FileStream readerPar);
-        ///public ulong GetAssetFileOffsByName(string name, AssetsFileReader reader, FileStream readerPar);
-        ///public ulong GetAssetFileInfoOffs(ulong fileIndex, AssetsFileReader reader, FileStream readerPar);
-        ///public ulong GetAssetFileInfoOffsByName(string name, AssetsFileReader reader, FileStream readerPar);
-        ///public ulong GetFileList(AssetsFileReader reader, FileStream readerPar);
+        ///public bool GetAssetFile(ulong fileInfoOffset, EndianReader reader, AssetFile buf, FileStream readerPar);
+        ///public ulong GetAssetFileOffs(ulong fileInfoOffset, EndianReader reader, FileStream readerPar);
+        ///public bool GetAssetFileByIndex(ulong fileIndex, AssetFile buf, uint size, EndianReader reader, FileStream readerPar);
+        ///public ulong GetAssetFileOffsByIndex(ulong fileIndex, EndianReader reader, FileStream readerPar);
+        ///public bool GetAssetFileByName(string name, AssetFile buf, uint size, EndianReader reader, FileStream readerPar);
+        ///public ulong GetAssetFileOffsByName(string name, EndianReader reader, FileStream readerPar);
+        ///public ulong GetAssetFileInfoOffs(ulong fileIndex, EndianReader reader, FileStream readerPar);
+        ///public ulong GetAssetFileInfoOffsByName(string name, EndianReader reader, FileStream readerPar);
+        ///public ulong GetFileList(EndianReader reader, FileStream readerPar);
     }
 }

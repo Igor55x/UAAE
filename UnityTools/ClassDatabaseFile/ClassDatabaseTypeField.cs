@@ -10,7 +10,7 @@
         public ushort version;
         public uint flags2;
 
-        public void Read(AssetsFileReader reader, int version)
+        public void Read(EndianReader reader, int version)
         {
             typeName = new ClassDatabaseFileString();
             typeName.Read(reader);
@@ -31,7 +31,7 @@
                     break;
             }
         }
-        public void Write(AssetsFileWriter writer, int version)
+        public void Write(EndianWriter writer, int version)
         {
             typeName.Write(writer);
             fieldName.Write(writer);

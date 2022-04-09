@@ -89,7 +89,7 @@ namespace AssetsAdvancedEditor.Winforms
             }
 
             using var fs = File.OpenWrite(path);
-            using var writer = new AssetsFileWriter(fs);
+            using var writer = new EndianWriter(fs, true);
             emip.Write(writer);
         }
 
@@ -115,7 +115,7 @@ namespace AssetsAdvancedEditor.Winforms
             var rootPath = Path.GetDirectoryName(ofd.FileName) ?? Workspace.AssetsRootDir;
             var emip = new InstallerPackageFile();
             using var fs = File.OpenRead(ofd.FileName);
-            var reader = new AssetsFileReader(fs);
+            var reader = new EndianReader(fs, true);
             emip.Read(reader);
 
             boxModName.Text = emip.modName;

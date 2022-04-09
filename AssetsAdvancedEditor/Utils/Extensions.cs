@@ -369,7 +369,7 @@ namespace AssetsAdvancedEditor.Utils
             var uncompressedMetadata = bundle.Metadata;
             if (bundle.Header.GetCompressionType() != 0)
             {
-                using var memReader = new AssetsFileReader(blocksInfoStream)
+                using var memReader = new EndianReader(blocksInfoStream, true)
                 {
                     Position = 0
                 };

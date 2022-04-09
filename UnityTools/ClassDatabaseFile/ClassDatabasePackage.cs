@@ -15,7 +15,7 @@ namespace UnityTools
         public List<ClassDatabaseFile> files;
         public byte[] stringTable;
 
-        public bool Read(AssetsFileReader reader)
+        public bool Read(EndianReader reader)
         {
             header = new ClassDatabasePackageHeader();
             header.Read(reader);
@@ -31,7 +31,7 @@ namespace UnityTools
                     newReader.Position = firstFile + header.files[i].offset;
                     var data = newReader.ReadBytes((int)header.files[i].length);
                     using var ms = new MemoryStream(data);
-                    using var r = new AssetsFileReader(ms);
+                    using var r = new EndianReader(ms, true);
                     var file = new ClassDatabaseFile();
                     file.Read(r);
                     files.Add(file);
@@ -62,17 +62,14 @@ namespace UnityTools
                         return valid;
                     }
 
-                    newReader = new AssetsFileReader(ms)
-                    {
-                        BigEndian = false
-                    };
+                    newReader = new EndianReader(ms);
                 }
                 for (var i = 0; i < header.fileCount; i++)
                 {
                     newReader.Position = firstFile + header.files[i].offset;
                     var data = newReader.ReadBytes((int)header.files[i].length);
                     using var ms = new MemoryStream(data);
-                    using var r = new AssetsFileReader(ms);
+                    using var r = new EndianReader(ms, true);
                     var file = new ClassDatabaseFile();
                     file.Read(r);
                     files.Add(file);
@@ -106,10 +103,7 @@ namespace UnityTools
                         return valid;
                 }
 
-                newReader = new AssetsFileReader(ms)
-                {
-                    BigEndian = false
-                };
+                newReader = new EndianReader(ms);
             }
             stringTable = newReader.ReadBytes((int)header.stringTableLenUncompressed);
             for (var i = 0; i < header.fileCount; i++)
@@ -121,7 +115,7 @@ namespace UnityTools
             return valid;
         }
 
-        public void Write(AssetsFileWriter writer, int optimizeStringTable = 1, int compress = 1)
+        public void Write(EndianWriter writer, int optimizeStringTable = 1, int compress = 1)
         {
             var filePos = writer.BaseStream.Position;
 
@@ -165,7 +159,7 @@ namespace UnityTools
             header.Write(writer);
 
             using (var cldbMs = new MemoryStream())
-            using (var cldbWriter = new AssetsFileWriter(cldbMs))
+            using (var cldbWriter = new EndianWriter(cldbMs, true))
             {
                 //annoyingly, files and header.files are two different lists...
                 for (var i = 0; i < files.Count; i++)
@@ -276,7 +270,7 @@ namespace UnityTools
             return false;
         }
 
-        public bool ImportFile(AssetsFileReader reader)
+        public bool ImportFile(EndianReader reader)
         {
             var cldb = new ClassDatabaseFile();
             var valid = cldb.Read(reader);

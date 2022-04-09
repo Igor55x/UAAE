@@ -8,12 +8,12 @@
             Data = data;
         }
 
-        public Hash128(AssetsFileReader reader)
+        public Hash128(EndianReader reader)
         {
             Data = reader.ReadBytes(16);
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.Write(Data);
         }

@@ -20,7 +20,7 @@ namespace UnityTools
         {
             path = Path.GetFullPath(filePath);
             name = Path.Combine(root, Path.GetFileName(path));
-            file = new AssetsFile(new AssetsFileReader(stream));
+            file = new AssetsFile(new EndianReader(stream, true));
             table = new AssetsFileTable(file);
             dependencies = new List<AssetsFileInstance>(new AssetsFileInstance[file.dependencies.dependencyCount]);
         }
@@ -29,7 +29,7 @@ namespace UnityTools
         {
             path = stream.Name;
             name = Path.Combine(root, Path.GetFileName(path));
-            file = new AssetsFile(new AssetsFileReader(stream));
+            file = new AssetsFile(new EndianReader(stream, true));
             table = new AssetsFileTable(file);
             dependencies = new List<AssetsFileInstance>(new AssetsFileInstance[file.dependencies.dependencyCount]);
         }

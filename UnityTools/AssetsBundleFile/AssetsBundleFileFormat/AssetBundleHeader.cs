@@ -81,11 +81,10 @@ namespace UnityTools
         public byte Unknown2; // bool???
         #endregion
 
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             reader.BigEndian = true;
-            if (!Enum.TryParse(reader.ReadNullTerminated(), out Signature))
-                return;
+            if (!Enum.TryParse(reader.ReadNullTerminated(), out Signature)) return;
 
             Version = reader.ReadUInt32();
             MinUnityVersion = reader.ReadNullTerminated();
@@ -102,7 +101,7 @@ namespace UnityTools
                 }
                 if (Version >= 7)
                 {
-                    reader.Align16();
+                    reader.Align(16);
                 }
             }
             else if (Version >= 3)
@@ -140,7 +139,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.BigEndian = true;
             writer.WriteNullTerminated(Signature.ToString());
@@ -159,7 +158,7 @@ namespace UnityTools
                 }
                 if (Version >= 7)
                 {
-                    writer.Align16();
+                    writer.Align(16);
                 }
             }
             else if (Version >= 3)

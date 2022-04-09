@@ -13,7 +13,7 @@ namespace AssetsAdvancedEditor.Assets
     public static class AssetImporter
     {
         private static StreamReader Reader;
-        private static AssetsFileWriter Writer;
+        private static EndianWriter Writer;
 
         public static AssetsReplacer ImportRawAsset(string path, AssetItem item)
         {
@@ -23,10 +23,7 @@ namespace AssetsAdvancedEditor.Assets
         public static AssetsReplacer ImportDump(string path, AssetItem item, DumpType dumpType)
         {
             using var ms = new MemoryStream();
-            Writer = new AssetsFileWriter(ms)
-            {
-                BigEndian = false
-            };
+            Writer = new EndianWriter(ms);
             try
             {
                 switch (dumpType)

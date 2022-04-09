@@ -10,14 +10,14 @@
         public uint CompressedSize;
         public ushort Flags;
 
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             DecompressedSize = reader.ReadUInt32();
             CompressedSize = reader.ReadUInt32();
             Flags = reader.ReadUInt16();
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.Write(DecompressedSize);
             writer.Write(CompressedSize);

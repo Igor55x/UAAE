@@ -7,7 +7,7 @@
         public int type;
         public string assetPath;
         public string originalAssetPath;
-        public void Read(AssetsFileReader reader)
+        public void Read(EndianReader reader)
         {
             bufferedPath = reader.ReadNullTerminated();
             guid = new GUID128();
@@ -24,7 +24,7 @@
             }
         }
 
-        public void Write(AssetsFileWriter writer)
+        public void Write(EndianWriter writer)
         {
             writer.WriteNullTerminated(bufferedPath);
             guid.Write(writer);

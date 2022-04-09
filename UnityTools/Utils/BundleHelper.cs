@@ -2,7 +2,6 @@
 using System.IO;
 using UnityTools.Utils;
 using UnityTools.Compression;
-using System;
 
 namespace UnityTools
 {
@@ -29,7 +28,7 @@ namespace UnityTools
         {
             bundle.GetFileRange(index, out var offset, out var length);
             var ss = new SegmentStream(bundle.Reader.BaseStream, offset, length);
-            var reader = new AssetsFileReader(ss);
+            var reader = new EndianReader(ss, true);
             return new AssetsFile(reader);
         }
 
@@ -73,11 +72,11 @@ namespace UnityTools
         public static AssetBundleFile UnpackBundle(AssetBundleFile file, bool freeOriginalStream = true)
         {
             var ms = new MemoryStream();
-            file.Unpack(file.Reader, new AssetsFileWriter(ms));
+            file.Unpack(file.Reader, new EndianWriter(ms, true));
             ms.Position = 0;
 
             var newFile = new AssetBundleFile();
-            newFile.Read(new AssetsFileReader(ms));
+            newFile.Read(new EndianReader(ms, true));
 
             if (freeOriginalStream)
             {
@@ -88,11 +87,11 @@ namespace UnityTools
 
         public static AssetBundleFile UnpackBundleToStream(AssetBundleFile file, Stream stream, bool freeOriginalStream = true)
         {
-            file.Unpack(file.Reader, new AssetsFileWriter(stream));
+            file.Unpack(file.Reader, new EndianWriter(stream, true));
             stream.Position = 0;
 
             var newFile = new AssetBundleFile();
-            newFile.Read(new AssetsFileReader(stream));
+            newFile.Read(new EndianReader(stream, true));
 
             if (freeOriginalStream)
             {
@@ -154,7 +153,7 @@ namespace UnityTools
             }
             if (bundle.Header.GetCompressionType() != 0)
             {
-                using var memReader = new AssetsFileReader(blocksInfoStream)
+                using var memReader = new EndianReader(blocksInfoStream, true)
                 {
                     Position = 0
                 };

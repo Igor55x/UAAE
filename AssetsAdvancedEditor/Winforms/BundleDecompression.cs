@@ -83,12 +83,12 @@ namespace AssetsAdvancedEditor.Winforms
         private void DecompressToFile(string savePath)
         {
             var bundleStream = File.Open(savePath, FileMode.Create);
-            BundleInst.file.Unpack(BundleInst.file.Reader, new AssetsFileWriter(bundleStream));
+            BundleInst.file.Unpack(BundleInst.file.Reader, new EndianWriter(bundleStream, true));
 
             bundleStream.Position = 0;
 
             var newBundle = new AssetBundleFile();
-            newBundle.Read(new AssetsFileReader(bundleStream));
+            newBundle.Read(new EndianReader(bundleStream, true));
 
             BundleInst.file.Reader.Close();
             BundleInst.file = newBundle;
@@ -97,12 +97,12 @@ namespace AssetsAdvancedEditor.Winforms
         private void DecompressToMemory()
         {
             var bundleStream = new MemoryStream();
-            BundleInst.file.Unpack(BundleInst.file.Reader, new AssetsFileWriter(bundleStream));
+            BundleInst.file.Unpack(BundleInst.file.Reader, new EndianWriter(bundleStream, true));
 
             bundleStream.Position = 0;
 
             var newBundle = new AssetBundleFile();
-            newBundle.Read(new AssetsFileReader(bundleStream));
+            newBundle.Read(new EndianReader(bundleStream, true));
 
             BundleInst.file.Reader.Close();
             BundleInst.file = newBundle;

@@ -14,7 +14,7 @@ namespace UnityTools
 
         public uint bigIDEnabled;
 
-        public void Read(AssetsFileReader reader, uint version)
+        public void Read(EndianReader reader, uint version)
         {
             unityVersion = reader.ReadNullTerminated();
             this.version = reader.ReadUInt32();
@@ -48,7 +48,7 @@ namespace UnityTools
             }
         }
 
-        public void Write(AssetsFileWriter writer, uint version)
+        public void Write(EndianWriter writer, uint version)
         {
             writer.WriteNullTerminated(unityVersion);
             writer.Write(this.version);

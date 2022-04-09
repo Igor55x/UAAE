@@ -6,7 +6,7 @@ namespace UnityTools
     public class AssetsFileTable
     {
         public AssetsFile File;
-        public AssetsFileReader Reader;
+        public EndianReader Reader;
         public Stream ReaderPar;
 
         public uint InfoCount;

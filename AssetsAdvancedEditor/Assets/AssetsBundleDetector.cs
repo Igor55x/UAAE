@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Text.RegularExpressions;
-using UnityTools;
 
 namespace AssetsAdvancedEditor.Assets
 {
@@ -8,25 +7,25 @@ namespace AssetsAdvancedEditor.Assets
     {
         public static DetectedFileType DetectFileType(string filePath)
         {
-            string possibleBundleHeader;
+            string possibleHeader;
             int possibleFormat;
             string emptyVersion;
 
             using (var fs = File.OpenRead(filePath))
-            using (var reader = new AssetsFileReader(fs))
+            using (var reader = new EndianReader(fs, true))
             {
-                if (fs.Length < 0x20) return DetectedFileType.Unknown;
-                possibleBundleHeader = reader.ReadStringLength(7);
+                if (fs.Length < 0x20)
+                    return DetectedFileType.Unknown;
+
+                possibleHeader = reader.ReadStringLength(5);
                 reader.Position = 0x08;
                 possibleFormat = reader.ReadInt32();
-                reader.Position = possibleFormat >= 0x16 ? 0x30 : 0x14;
 
-                if (possibleFormat >= 0x16)
-                    reader.Position += 0x1c;
+                reader.Position = possibleFormat >= 0x16 ? 0x30 : 0x14;
 
                 var possibleVersion = "";
                 char curChar;
-                while (reader.Position < reader.BaseStream.Length && (curChar = (char) reader.ReadByte()) != 0x00)
+                while (reader.Position < reader.Length && (curChar = reader.ReadChar()) != 0x00)
                 {
                     possibleVersion += curChar;
                     if (possibleVersion.Length > 0xFF) break;
@@ -35,7 +34,7 @@ namespace AssetsAdvancedEditor.Assets
                 emptyVersion = Regex.Replace(possibleVersion, "[a-zA-Z0-9\\.]", "");
             }
 
-            if (possibleBundleHeader == "UnityFS")
+            if (possibleHeader.StartsWith("Unity") || possibleHeader.StartsWith("MZ") || possibleHeader.StartsWith("FSB5"))
             {
                 return DetectedFileType.BundleFile;
             }
