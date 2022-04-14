@@ -13,6 +13,7 @@ namespace AssetsAdvancedEditor.Assets
     {
         public AssetsManager Am { get; }
         public PluginManager Pm { get; }
+        public BundleFileInstance BundleInstance; // todo
         public AssetsFileInstance MainInstance { get; }
         public bool FromBundle { get; }
 
@@ -24,6 +25,7 @@ namespace AssetsAdvancedEditor.Assets
 
         public Dictionary<int, List<AssetsReplacer>> NewReplacers { get; }
         public Dictionary<AssetID, AssetsReplacer> NewAssets { get; }
+        public List<BundleReplacer> BundleReplacers { get; } // todo
         public Dictionary<AssetID, Stream> NewAssetDatas { get; }
 
         public bool Modified { get; set; }
@@ -39,6 +41,11 @@ namespace AssetsAdvancedEditor.Assets
             MainInstance = file;
             FromBundle = fromBundle;
 
+            if (fromBundle)
+            {
+                BundleInstance = file.parentBundle;
+            }
+
             LoadedFiles = new List<AssetsFileInstance>
             {
                 file
@@ -50,6 +57,7 @@ namespace AssetsAdvancedEditor.Assets
 
             NewReplacers = new Dictionary<int, List<AssetsReplacer>>();
             NewAssets = new Dictionary<AssetID, AssetsReplacer>();
+            BundleReplacers = new List<BundleReplacer>();
             NewAssetDatas = new Dictionary<AssetID, Stream>();
 
             Modified = false;

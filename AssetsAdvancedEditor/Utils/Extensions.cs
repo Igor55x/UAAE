@@ -1,14 +1,25 @@
-﻿using UnityTools;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AssetsAdvancedEditor.Assets;
+using UnityTools;
 using UnityTools.Compression;
 
 namespace AssetsAdvancedEditor.Utils
 {
     public static class Extensions
     {
+        private static readonly string[] byteSizeSuffixes = new [] { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+        public static string GetFormattedByteSize(long size)
+        {
+            size = Math.Abs(size);
+            var log = (int)Math.Log(size, 1024);
+            var div = Math.Pow(1024, log);
+            var num = size / div;
+            return $"{num:f2} {byteSizeSuffixes[log]}";
+        }
+
         public static string ReplaceInvalidFileNameChars(string filename)
         {
             return string.Join("_", filename.Split(Path.GetInvalidFileNameChars()));

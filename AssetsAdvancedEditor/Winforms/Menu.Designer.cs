@@ -52,6 +52,8 @@
             this.btnImport = new System.Windows.Forms.Button();
             this.btnRemove = new System.Windows.Forms.Button();
             this.btnInfo = new System.Windows.Forms.Button();
+            this.btnExportAll = new System.Windows.Forms.Button();
+            this.btnImportAll = new System.Windows.Forms.Button();
             this.MenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -87,7 +89,7 @@
             // MenuOpen
             // 
             this.MenuOpen.Name = "MenuOpen";
-            this.MenuOpen.Size = new System.Drawing.Size(180, 22);
+            this.MenuOpen.Size = new System.Drawing.Size(168, 22);
             this.MenuOpen.Text = "&Open";
             this.MenuOpen.Click += new System.EventHandler(this.MenuOpen_Click);
             // 
@@ -95,14 +97,14 @@
             // 
             this.MenuLoadPackageFile.Enabled = false;
             this.MenuLoadPackageFile.Name = "MenuLoadPackageFile";
-            this.MenuLoadPackageFile.Size = new System.Drawing.Size(180, 22);
+            this.MenuLoadPackageFile.Size = new System.Drawing.Size(168, 22);
             this.MenuLoadPackageFile.Text = "&Load Package File";
             // 
             // MenuClose
             // 
             this.MenuClose.Enabled = false;
             this.MenuClose.Name = "MenuClose";
-            this.MenuClose.Size = new System.Drawing.Size(180, 22);
+            this.MenuClose.Size = new System.Drawing.Size(168, 22);
             this.MenuClose.Text = "&Close";
             this.MenuClose.Click += new System.EventHandler(this.MenuClose_Click);
             // 
@@ -110,20 +112,20 @@
             // 
             this.MenuSave.Enabled = false;
             this.MenuSave.Name = "MenuSave";
-            this.MenuSave.Size = new System.Drawing.Size(180, 22);
+            this.MenuSave.Size = new System.Drawing.Size(168, 22);
             this.MenuSave.Text = "&Save";
             this.MenuSave.Click += new System.EventHandler(this.MenuSave_Click);
             // 
             // MenuSeparator1
             // 
             this.MenuSeparator1.Name = "MenuSeparator1";
-            this.MenuSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.MenuSeparator1.Size = new System.Drawing.Size(165, 6);
             // 
             // MenuCompress
             // 
             this.MenuCompress.Enabled = false;
             this.MenuCompress.Name = "MenuCompress";
-            this.MenuCompress.Size = new System.Drawing.Size(180, 22);
+            this.MenuCompress.Size = new System.Drawing.Size(168, 22);
             this.MenuCompress.Text = "&Compress";
             this.MenuCompress.Click += new System.EventHandler(this.MenuCompress_Click);
             // 
@@ -134,7 +136,7 @@
             this.MenuCreatePackageFile});
             this.MenuModMaker.Enabled = false;
             this.MenuModMaker.Name = "MenuModMaker";
-            this.MenuModMaker.Size = new System.Drawing.Size(180, 22);
+            this.MenuModMaker.Size = new System.Drawing.Size(168, 22);
             this.MenuModMaker.Text = "Mod Maker";
             // 
             // MenuCreateStandaloneexeInstaller
@@ -152,7 +154,7 @@
             // MenuExit
             // 
             this.MenuExit.Name = "MenuExit";
-            this.MenuExit.Size = new System.Drawing.Size(180, 22);
+            this.MenuExit.Size = new System.Drawing.Size(168, 22);
             this.MenuExit.Text = "&Exit";
             this.MenuExit.Click += new System.EventHandler(this.MenuExit_Click);
             // 
@@ -169,14 +171,14 @@
             // 
             this.MenuEditTypeDatabase.Enabled = false;
             this.MenuEditTypeDatabase.Name = "MenuEditTypeDatabase";
-            this.MenuEditTypeDatabase.Size = new System.Drawing.Size(180, 22);
+            this.MenuEditTypeDatabase.Size = new System.Drawing.Size(172, 22);
             this.MenuEditTypeDatabase.Text = "Edit Type &Database";
             // 
             // MenuEditTypePackage
             // 
             this.MenuEditTypePackage.Enabled = false;
             this.MenuEditTypePackage.Name = "MenuEditTypePackage";
-            this.MenuEditTypePackage.Size = new System.Drawing.Size(180, 22);
+            this.MenuEditTypePackage.Size = new System.Drawing.Size(172, 22);
             this.MenuEditTypePackage.Text = "Edit Type &Package";
             // 
             // MenuHelp
@@ -227,14 +229,14 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnExport.Enabled = false;
             this.btnExport.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnExport.Location = new System.Drawing.Point(13, 82);
+            this.btnExport.Location = new System.Drawing.Point(13, 78);
             this.btnExport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(87, 33);
             this.btnExport.TabIndex = 3;
             this.btnExport.Text = "Export";
             this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
+            this.btnExport.Click += new System.EventHandler(this.BtnExport_Click);
             // 
             // btnImport
             // 
@@ -242,29 +244,29 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnImport.Enabled = false;
             this.btnImport.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnImport.Location = new System.Drawing.Point(104, 82);
+            this.btnImport.Location = new System.Drawing.Point(104, 78);
             this.btnImport.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnImport.Name = "btnImport";
             this.btnImport.Size = new System.Drawing.Size(87, 33);
             this.btnImport.TabIndex = 4;
             this.btnImport.Text = "Import";
             this.btnImport.UseVisualStyleBackColor = true;
-            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
+            this.btnImport.Click += new System.EventHandler(this.BtnImport_Click);
             // 
             // btnRemove
             // 
-            this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.btnRemove.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRemove.Enabled = false;
             this.btnRemove.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnRemove.Location = new System.Drawing.Point(195, 82);
+            this.btnRemove.Location = new System.Drawing.Point(195, 78);
             this.btnRemove.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnRemove.Name = "btnRemove";
             this.btnRemove.Size = new System.Drawing.Size(87, 33);
             this.btnRemove.TabIndex = 6;
             this.btnRemove.Text = "Remove";
             this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemove_Click);
             // 
             // btnInfo
             // 
@@ -272,21 +274,52 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInfo.Enabled = false;
             this.btnInfo.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
-            this.btnInfo.Location = new System.Drawing.Point(286, 82);
+            this.btnInfo.Location = new System.Drawing.Point(286, 78);
             this.btnInfo.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(87, 33);
             this.btnInfo.TabIndex = 5;
             this.btnInfo.Text = "Info";
             this.btnInfo.UseVisualStyleBackColor = true;
-            this.btnInfo.Click += new System.EventHandler(this.btnInfo_Click);
+            this.btnInfo.Click += new System.EventHandler(this.BtnInfo_Click);
+            // 
+            // btnExportAll
+            // 
+            this.btnExportAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnExportAll.Enabled = false;
+            this.btnExportAll.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnExportAll.Location = new System.Drawing.Point(13, 113);
+            this.btnExportAll.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnExportAll.Name = "btnExportAll";
+            this.btnExportAll.Size = new System.Drawing.Size(178, 33);
+            this.btnExportAll.TabIndex = 7;
+            this.btnExportAll.Text = "Export all";
+            this.btnExportAll.UseVisualStyleBackColor = true;
+            this.btnExportAll.Click += new System.EventHandler(this.BtnExportAll_Click);
+            // 
+            // btnImportAll
+            // 
+            this.btnImportAll.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnImportAll.Enabled = false;
+            this.btnImportAll.Font = new System.Drawing.Font("Segoe UI Semibold", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.btnImportAll.Location = new System.Drawing.Point(195, 113);
+            this.btnImportAll.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.btnImportAll.Name = "btnImportAll";
+            this.btnImportAll.Size = new System.Drawing.Size(178, 33);
+            this.btnImportAll.TabIndex = 8;
+            this.btnImportAll.Text = "Import all";
+            this.btnImportAll.UseVisualStyleBackColor = true;
+            this.btnImportAll.Click += new System.EventHandler(this.BtnImportAll_Click);
             // 
             // Menu
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
-            this.ClientSize = new System.Drawing.Size(385, 125);
+            this.ClientSize = new System.Drawing.Size(385, 152);
+            this.Controls.Add(this.btnImportAll);
             this.Controls.Add(this.btnInfo);
             this.Controls.Add(this.btnRemove);
             this.Controls.Add(this.btnImport);
@@ -294,6 +327,7 @@
             this.Controls.Add(this.cboxBundleContents);
             this.Controls.Add(this.lblFileName);
             this.Controls.Add(this.MenuStrip);
+            this.Controls.Add(this.btnExportAll);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.MenuStrip;
@@ -335,6 +369,8 @@
         private System.Windows.Forms.Button btnImport;
         private System.Windows.Forms.Button btnRemove;
         private System.Windows.Forms.Button btnInfo;
+        private System.Windows.Forms.Button btnExportAll;
+        private System.Windows.Forms.Button btnImportAll;
     }
 }
 

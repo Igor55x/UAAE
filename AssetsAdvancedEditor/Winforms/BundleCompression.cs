@@ -9,15 +9,15 @@ namespace AssetsAdvancedEditor.Winforms
 {
     public partial class BundleCompression : Form
     {
-        public BundleFileInstance BundleInst;
         public bool Compressed;
+        public BundleFileInstance BundleInst;
         public BundleCompression(BundleFileInstance bundleInst)
         {
             InitializeComponent();
             BundleInst = bundleInst;
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOK_Click(object sender, EventArgs e)
         {
             if (BundleInst == null) return;
             AssetBundleCompressionType compType;
@@ -41,7 +41,7 @@ namespace AssetsAdvancedEditor.Winforms
                     Filter = @"All types (*.*)|*.*"
                 };
                 if (sfd.ShowDialog() != DialogResult.OK) return;
-                bw.DoWork += delegate { CompressBundle(BundleInst, sfd.FileName, compType); };
+                bw.DoWork += delegate { CompressBundle(sfd.FileName, compType); };
                 bw.RunWorkerCompleted += delegate
                 {
                     MsgBoxUtils.ShowInfoDialog("The bundle file has been successfully packed!", MessageBoxButtons.OK);
@@ -56,11 +56,11 @@ namespace AssetsAdvancedEditor.Winforms
             }
         }
 
-        private static void CompressBundle(BundleFileInstance bundleInst, string path, AssetBundleCompressionType compType)
+        private void CompressBundle(string path, AssetBundleCompressionType compType)
         {
             using var fs = File.OpenWrite(path);
             using var writer = new EndianWriter(fs, true);
-            bundleInst.file.Pack(bundleInst.file.Reader, writer, compType);
+            BundleInst.file.Pack(BundleInst.file.Reader, writer, compType);
         }
     }
 }

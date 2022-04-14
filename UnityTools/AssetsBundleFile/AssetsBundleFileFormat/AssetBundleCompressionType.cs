@@ -1,6 +1,6 @@
 ﻿namespace UnityTools
 {
-    public enum AssetBundleCompressionType
+    public enum AssetBundleCompressionType : byte
     {
         None = 0,
         Lzma,

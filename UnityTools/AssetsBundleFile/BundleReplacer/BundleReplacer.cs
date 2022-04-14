@@ -29,9 +29,6 @@
 
         public abstract long WriteReplacer(EndianWriter writer);
 
-        public static BundleReplacer ReadBundleReplacer(EndianReader reader)
-        {
-            return null;
-        }
+        //public abstract BundleReplacer ReadBundleReplacer(EndianReader reader);
     }
 }

@@ -70,7 +70,7 @@
             this.secondLink.TabStop = true;
             this.secondLink.Text = "https://community.7daystodie.com/profile/418-derpopo";
             this.secondLink.VisitedLinkColor = System.Drawing.Color.Blue;
-            this.secondLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.secondLink_LinkClicked);
+            this.secondLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.SecondLink_LinkClicked);
             // 
             // firstLink
             // 
@@ -83,7 +83,7 @@
             this.firstLink.TabStop = true;
             this.firstLink.Text = "https://github.com/Igor55x";
             this.firstLink.VisitedLinkColor = System.Drawing.Color.Blue;
-            this.firstLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.firstLink_LinkClicked);
+            this.firstLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.FirstLink_LinkClicked);
             // 
             // hint
             // 
@@ -93,7 +93,7 @@
             this.hint.Name = "hint";
             this.hint.Size = new System.Drawing.Size(217, 15);
             this.hint.TabIndex = 4;
-            this.hint.Text = "See README.txt for license information.";
+            this.hint.Text = "See UAAE.txt for license information.";
             // 
             // btnOK
             // 

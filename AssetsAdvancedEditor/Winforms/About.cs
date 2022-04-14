@@ -7,19 +7,19 @@ namespace AssetsAdvancedEditor.Winforms
     {
         public About() => InitializeComponent();
 
-        private void firstLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void FirstLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            openLink("https://github.com/Igor55x");
+            OpenLink("https://github.com/Igor55x");
         }
 
-        private void secondLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void SecondLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            openLink("https://community.7daystodie.com/profile/418-derpopo");
+            OpenLink("https://community.7daystodie.com/profile/418-derpopo");
         }
 
-        private static void openLink(string url)
+        private static void OpenLink(string url)
         {
-            var proc = new Process
+            var process = new Process
             {
                 StartInfo =
                 {
@@ -27,7 +27,7 @@ namespace AssetsAdvancedEditor.Winforms
                     FileName = url
                 }
             };
-            proc.Start();
+            process.Start();
         }
     }
 }

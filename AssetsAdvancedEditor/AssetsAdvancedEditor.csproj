@@ -8,9 +8,12 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
     <Authors>Igor55</Authors>
     <Product>Unity Assets Advanced Editor</Product>
-    <Copyright>Copyright © Igor55, 2021</Copyright>
+    <Copyright>Copyright © 2021 - 2022 Igor55</Copyright>
     <Description>UAAE is an advanced editor for Unity .assets and AssetBundle files. It is based on DerPopo's UABE tool, but improves its functions.</Description>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <FileVersion>1.3.1</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -18,12 +21,30 @@
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <FileAlignment>1024</FileAlignment>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>False</Optimize>
+    <FileAlignment>1024</FileAlignment>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <FileAlignment>1024</FileAlignment>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <FileAlignment>1024</FileAlignment>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <FileAlignment>1024</FileAlignment>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <FileAlignment>1024</FileAlignment>
   </PropertyGroup>
 
   <ItemGroup>

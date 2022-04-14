@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Windows.Forms;
+using AssetsAdvancedEditor.Utils;
 using UnityTools;
 
 namespace AssetsAdvancedEditor.Winforms
 {
     public partial class BundleLoader : Form
     {
-        public BundleFileInstance BundleInst;
         public bool Loaded;
+        public BundleFileInstance BundleInst;
 
         public BundleLoader(BundleFileInstance bundleInst)
         {
@@ -25,10 +26,10 @@ namespace AssetsAdvancedEditor.Winforms
                     lblCompType.Text = @"None";
                     break;
                 case AssetBundleCompressionType.Lzma:
-                    lblCompType.Text = @"LZMA";
+                    lblCompType.Text = @"Lzma";
                     break;
                 case AssetBundleCompressionType.Lz4 or AssetBundleCompressionType.Lz4HC:
-                    lblCompType.Text = @"LZ4";
+                    lblCompType.Text = @"Lz4";
                     break;
                 default:
                     lblCompType.Text = @"Unknown";
@@ -42,17 +43,19 @@ namespace AssetsAdvancedEditor.Winforms
             if (compType == 0)
             {
                 lblNote.Text = @"Bundle is not compressed. You can load it or compress it.";
-                btnCompress.Enabled = true;
                 btnLoad.Enabled = true;
+                btnCompress.Enabled = true;
             }
             else
             {
                 lblNote.Text = @"Bundle is compressed. You must decompress the bundle to load.";
                 btnDecompress.Enabled = true;
+                BundleInst.file.UnpackInfoOnly();
             }
+            lblBundleSize.Text = Extensions.GetFormattedByteSize(GetBundleDataDecompressedSize(BundleInst.file));
         }
 
-        private void btnDecompress_Click(object sender, EventArgs e)
+        private void BtnDecompress_Click(object sender, EventArgs e)
         {
             if (BundleInst == null) return;
             var dialog = new BundleDecompression(BundleInst);
@@ -76,7 +79,7 @@ namespace AssetsAdvancedEditor.Winforms
             };
         }
 
-        private void btnCompress_Click(object sender, EventArgs e)
+        private void BtnCompress_Click(object sender, EventArgs e)
         {
             if (BundleInst == null) return;
             var dialog = new BundleCompression(BundleInst);
@@ -88,10 +91,20 @@ namespace AssetsAdvancedEditor.Winforms
             }
         }
 
-        private void btnLoad_Click(object sender, EventArgs e)
+        private void BtnLoad_Click(object sender, EventArgs e)
         {
             Loaded = true;
             Close();
+        }
+
+        private long GetBundleDataDecompressedSize(AssetBundleFile bundle)
+        {
+            var totalSize = 0L;
+            foreach (var info in bundle.Metadata.DirectoryInfo)
+            {
+                totalSize += info.DecompressedSize;
+            }
+            return totalSize;
         }
     }
 }

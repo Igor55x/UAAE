@@ -102,14 +102,12 @@ namespace UnityTools
 
         public static AssetBundleDirectoryInfo GetDirInfo(AssetBundleFile bundle, int index)
         {
-            var dirInf = bundle.Metadata.DirectoryInfo;
-            return dirInf[index];
+            return bundle.Metadata.DirectoryInfo[index];
         }
 
         public static AssetBundleDirectoryInfo GetDirInfo(AssetBundleFile bundle, string name)
         {
-            var dirInf = bundle.Metadata.DirectoryInfo;
-            foreach (var info in dirInf)
+            foreach (var info in bundle.Metadata.DirectoryInfo)
             {
                 if (info.Name == name)
                 {

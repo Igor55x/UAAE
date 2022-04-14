@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Assets;
 using AssetsAdvancedEditor.Utils;
@@ -109,9 +108,9 @@ namespace AssetsAdvancedEditor.Winforms
 
         private void LoadAssetsFile(string path)
         {
-            //var bw = new BackgroundWorker();
-            //bw.DoWork += delegate
-            //{
+            var bw = new BackgroundWorker();
+            bw.DoWork += delegate
+            {
                 var fileInst = Am.LoadAssetsFile(path, true);
 
                 if (!LoadOrAskCldb(fileInst))
@@ -119,8 +118,8 @@ namespace AssetsAdvancedEditor.Winforms
 
                 using var dialog = new AssetsViewer(Am, fileInst);
                 dialog.ShowDialog();
-            //};
-            //bw.RunWorkerAsync();
+            };
+            bw.RunWorkerAsync();
         }
 
         private void LoadBundleFile(string path)
@@ -129,21 +128,18 @@ namespace AssetsAdvancedEditor.Winforms
             Loader = new BundleLoader(BundleInst);
             Loader.ShowDialog();
             if (!Loader.Loaded) return;
-            cboxBundleContents.Enabled = true;
-            btnExport.Enabled = true;
-            btnImport.Enabled = true;
-            btnRemove.Enabled = true;
-            btnInfo.Enabled = true;
-            MenuClose.Enabled = true;
-            MenuSave.Enabled = true;
-            MenuCompress.Enabled = true;
-            MenuOpen.Enabled = false;
+            SetBundleControlsEnabled(true);
 
             var infos = BundleInst.file.Metadata.DirectoryInfo;
-            cboxBundleContents.Items.Clear();
-            foreach (var info in infos)
+            for (var i = 0; i < infos.Length; i++)
             {
-                cboxBundleContents.Items.Add(info.Name);
+                var info = infos[i];
+                cboxBundleContents.Items.Add(new ComboBoxAssetItem
+                {
+                    DisplayName = info.Name,
+                    OriginalName = info.Name,
+                    Index = i
+                });
             }
             cboxBundleContents.SelectedIndex = 0;
             lblFileName.Text = BundleInst.name;
@@ -153,26 +149,40 @@ namespace AssetsAdvancedEditor.Winforms
         {
             if (BundleInst == null) return;
 
-            using (var fs = File.OpenWrite(path))
-            using (var writer = new EndianWriter(fs, true))
+            if (Path.GetFullPath(BundleInst.path) == Path.GetFullPath(path))
             {
-                BundleInst.file.Write(writer, ModifiedFiles.Values.ToList());
+                var choice = MsgBoxUtils.ShowWarningDialog("This bundle is already open in UAAE, and this action will overwrite it.\n" +
+                                                           "Are you sure you want to continue?");
+                if (choice != DialogResult.Yes) return;
+
+                var tempPath = Path.Combine(Path.GetTempPath(), BundleInst.name);
+                using (var fs = File.OpenWrite(tempPath))
+                using (var writer = new EndianWriter(fs, true))
+                {
+                    BundleInst.file.Write(writer, ModifiedFiles.Values.ToList());
+                }
+                Am.UnloadBundleFile(path);
+                File.Replace(tempPath, path, path + ".backup");
+                Am.LoadBundleFile(path, true);
+                Modified = false;
             }
-            Modified = false;
+            else
+            {
+                using (var fs = File.OpenWrite(path))
+                using (var writer = new EndianWriter(fs, true))
+                {
+                    BundleInst.file.Write(writer, ModifiedFiles.Values.ToList());
+                }
+                Modified = false;
+            }
 
             for (var i = 0; i < cboxBundleContents.Items.Count; i++)
             {
-                var item = cboxBundleContents.Items[i].ToString();
-                if (item.Contains("*"))
+                var item = (ComboBoxAssetItem)cboxBundleContents.Items[i];
+                item.DisplayName = item.OriginalName;
+                if (item.Index == i)
                 {
-                    item = item.Replace(" *", "");
-                    var selIndex = cboxBundleContents.SelectedIndex;
-                    cboxBundleContents.Items.RemoveAt(i);
-                    cboxBundleContents.Items.Insert(i, item);
-                    if (selIndex == i)
-                    {
-                        cboxBundleContents.SelectedIndex = selIndex;
-                    }
+                    cboxBundleContents.SelectedIndex = item.Index;
                 }
             }
         }
@@ -185,18 +195,28 @@ namespace AssetsAdvancedEditor.Winforms
             Am.UnloadAllAssetsFiles(true);
             Am.UnloadAllBundleFiles();
 
-            cboxBundleContents.Items.Clear();
-            cboxBundleContents.Enabled = false;
-            btnExport.Enabled = false;
-            btnImport.Enabled = false;
-            btnRemove.Enabled = false;
-            btnInfo.Enabled = false;
-            MenuClose.Enabled = false;
-            MenuSave.Enabled = false;
-            MenuCompress.Enabled = false;
-            MenuOpen.Enabled = true;
-
+            SetBundleControlsEnabled(false);
             lblFileName.Text = @"No file opened.";
+        }
+
+        private void SetBundleControlsEnabled(bool enabled = true)
+        {
+            cboxBundleContents.Enabled = enabled;
+            if (!enabled)
+            {
+                cboxBundleContents.Items.Clear();
+            }
+            btnExport.Enabled = enabled;
+            btnImport.Enabled = enabled;
+            btnRemove.Enabled = enabled;
+            btnInfo.Enabled = enabled;
+            btnExportAll.Enabled = enabled;
+            btnImportAll.Enabled = enabled;
+
+            MenuOpen.Enabled = !enabled;
+            MenuClose.Enabled = enabled;
+            MenuSave.Enabled = enabled;
+            MenuCompress.Enabled = enabled;
         }
 
         private bool LoadOrAskCldb(AssetsFileInstance fileInst)
@@ -248,13 +268,13 @@ namespace AssetsAdvancedEditor.Winforms
             new About().ShowDialog();
         }
 
-        private void btnExport_Click(object sender, EventArgs e)
+        private void BtnExport_Click(object sender, EventArgs e)
         {
             if (BundleInst == null || cboxBundleContents.SelectedItem == null) return;
-            var index = cboxBundleContents.SelectedIndex;
 
-            var bunAssetName = BundleHelper.GetDirInfo(BundleInst.file, index).Name;
-            var assetData = BundleHelper.LoadAssetDataFromBundle(BundleInst.file, index);
+            var item = (ComboBoxAssetItem)cboxBundleContents.SelectedItem;
+            var bunAssetName = item.OriginalName;
+            var assetData = BundleHelper.LoadAssetDataFromBundle(BundleInst.file, bunAssetName);
 
             var sfd = new SaveFileDialog
             {
@@ -266,7 +286,7 @@ namespace AssetsAdvancedEditor.Winforms
             File.WriteAllBytes(sfd.FileName, assetData);
         }
 
-        private void btnImport_Click(object sender, EventArgs e)
+        private void BtnImport_Click(object sender, EventArgs e)
         {
             if (BundleInst == null) return;
             var ofd = new OpenFileDialog
@@ -275,40 +295,48 @@ namespace AssetsAdvancedEditor.Winforms
                 Filter = @"All types (*.*)|*.*|Assets file (*.assets)|*.assets"
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
-            foreach (var file in ofd.FileNames)
+
+            //todo replacer from stream rather than bytes
+            //also need to handle closing them somewhere
+            //and replacers don't support closing
+            var fileName = Path.GetFileName(ofd.FileName);
+            var fileBytes = File.ReadAllBytes(ofd.FileName);
+            var isSerialized = fileName.EndsWith(".resS") || fileName.EndsWith(".resource");
+            var replacer = AssetModifier.CreateBundleReplacer(fileName, isSerialized, fileBytes);
+            var item = (ComboBoxAssetItem)cboxBundleContents.SelectedItem;
+            if (item.OriginalName == fileName)
             {
-                var fileName = Path.GetFileName(file);
-                var fileBytes = File.ReadAllBytes(fileName);
-                var isSerialized = !(file.EndsWith(".resS") || file.EndsWith(".resource"));
-                var replacer = AssetModifier.CreateBundleReplacer(fileName, isSerialized, fileBytes);
-                var index = cboxBundleContents.Items.IndexOf(fileName);
-                if (index != -1)
-                {
-                    var item = cboxBundleContents.Items[index] + " *";
-                    cboxBundleContents.Items.RemoveAt(index);
-                    cboxBundleContents.Items.Insert(index, item);
-                }
-                else
-                {
-                    cboxBundleContents.Items.Add(fileName + " *");
-                }
-                ModifiedFiles[fileName] = replacer;
+                item.DisplayName += " *";
             }
+            else
+            {
+                var newIndex = cboxBundleContents.Items.Count;
+                cboxBundleContents.Items.Add(new ComboBoxAssetItem
+                {
+                    DisplayName = fileName,
+                    OriginalName = fileName,
+                    Index = newIndex
+                });
+                cboxBundleContents.SelectedIndex = newIndex;
+            }
+            ModifiedFiles[fileName] = replacer;
             Modified = true;
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void BtnRemove_Click(object sender, EventArgs e)
         {
-            var index = cboxBundleContents.SelectedIndex;
-            var info = BundleHelper.GetDirInfo(BundleInst.file, index);
-            var name = info?.Name ?? cboxBundleContents.SelectedText.Replace(" *", "");
+            if (BundleInst == null || cboxBundleContents.SelectedItem == null) return;
+
+            var item = (ComboBoxAssetItem)cboxBundleContents.SelectedItem;
+            var index = item.Index;
+            var name = item.OriginalName;
             if (ModifiedFiles.ContainsKey(name))
             {
                 ModifiedFiles.Remove(name);
             }
             else
             {
-                var isSerialized = !(name.EndsWith(".resS") || name.EndsWith(".resource"));
+                var isSerialized = BundleInst.file.IsAssetsFile(index);
                 ModifiedFiles.Add(name, AssetModifier.CreateBundleRemover(name, isSerialized));
             }
 
@@ -317,37 +345,36 @@ namespace AssetsAdvancedEditor.Winforms
                 cboxBundleContents.SelectedIndex = 0;
         }
 
-        private void btnInfo_Click(object sender, EventArgs e)
+        private void BtnInfo_Click(object sender, EventArgs e)
         {
             if (BundleInst == null || cboxBundleContents.SelectedItem == null) return;
-            var index = cboxBundleContents.SelectedIndex;
 
-            var dirInf = BundleHelper.GetDirInfo(BundleInst.file, index);
-            var bunAssetName = dirInf.Name;
+            var item = (ComboBoxAssetItem)cboxBundleContents.SelectedItem;
+            var index = item.Index;
+            var bunAssetName = item.OriginalName;
 
-            //When we make a modification to an assets file in the bundle,
-            //we replace the assets file in the manager. This way, all we
-            //have to do is not reload from the bundle if our assets file
-            //has been modified
-            MemoryStream assetStream;
+            // When we make a modification to an assets file in the bundle,
+            // we replace the assets file in the manager. This way, all we
+            // have to do is not reload from the bundle if our assets file
+            // has been modified
+            var assetMemPath = Path.Combine(BundleInst.path, bunAssetName);
+            MemoryStream assetStream = null;
+            bool isAssetsFile;
             if (!ModifiedFiles.ContainsKey(bunAssetName))
             {
                 var assetData = BundleHelper.LoadAssetDataFromBundle(BundleInst.file, index);
                 assetStream = new MemoryStream(assetData);
+                isAssetsFile = BundleInst.file.IsAssetsFile(index);
             }
             else
             {
-                //unused if the file already exists
-                assetStream = null;
+                isAssetsFile = AssetsFile.IsAssetsFile(assetMemPath);
             }
 
-            //warning: does not update if you import an assets file onto
-            //a file that wasn't originally an assets file
-            var isAssetsFile = BundleInst.file.IsAssetsFile(index);
-
+            // [Warning]: does not update if you import an assets file onto
+            // a file that wasn't originally an assets file
             if (isAssetsFile)
             {
-                var assetMemPath = Path.Combine(BundleInst.path, bunAssetName);
                 var fileInst = Am.LoadAssetsFile(assetStream, assetMemPath, true);
 
                 if (!LoadOrAskCldb(fileInst))
@@ -362,8 +389,78 @@ namespace AssetsAdvancedEditor.Winforms
             }
             else
             {
-                MsgBoxUtils.ShowErrorDialog("This doesn't seem to be a valid assets file.");
+                MsgBoxUtils.ShowErrorDialog("This doesn't seem to be a valid assets file!");
             }
+        }
+
+        private void BtnExportAll_Click(object sender, EventArgs e)
+        {
+            if (BundleInst == null) return;
+
+            var ofd = new OpenFolderDialog
+            {
+                Title = @"Select a folder for assets"
+            };
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            for (var i = 0; i < cboxBundleContents.Items.Count; i++)
+            {
+                var bunAssetName = BundleHelper.GetDirInfo(BundleInst.file, i).Name;
+                var bunAssetPath = Path.Combine(ofd.Folder, bunAssetName);
+                var assetData = BundleHelper.LoadAssetDataFromBundle(BundleInst.file, i);
+
+                // Create dirs if bundle contains / or \\ in path
+                if (bunAssetName.Contains('\\') || bunAssetName.Contains('/'))
+                {
+                    var bunAssetDir = Path.GetDirectoryName(bunAssetPath);
+                    if (!Directory.Exists(bunAssetDir))
+                    {
+                        Directory.CreateDirectory(bunAssetDir);
+                    }
+                }
+                File.WriteAllBytes(bunAssetPath, assetData);
+            }
+        }
+
+        private void BtnImportAll_Click(object sender, EventArgs e)
+        {
+            if (BundleInst == null) return;
+
+            var ofd = new OpenFolderDialog
+            {
+                Title = @"Select an input path"
+            };
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            foreach (var file in Directory.EnumerateFiles(ofd.Folder))
+            {
+                //todo replacer from stream rather than bytes
+                //also need to handle closing them somewhere
+                //and replacers don't support closing
+                var fileName = Path.GetFileName(file);
+                var fileBytes = File.ReadAllBytes(file);
+                var isSerialized = fileName.EndsWith(".resS") || fileName.EndsWith(".resource");
+                var replacer = AssetModifier.CreateBundleReplacer(fileName, isSerialized, fileBytes);
+                var index = cboxBundleContents.Items.IndexOf(fileName);
+                if (index != -1)
+                {
+                    var item = (ComboBoxAssetItem)cboxBundleContents.Items[index];
+                    item.DisplayName += " *";
+                }
+                else
+                {
+                    var newIndex = cboxBundleContents.Items.Count;
+                    cboxBundleContents.Items.Add(new ComboBoxAssetItem
+                    {
+                        DisplayName = fileName,
+                        OriginalName = fileName,
+                        Index = newIndex
+                    });
+                    cboxBundleContents.SelectedIndex = newIndex;
+                }
+                ModifiedFiles[fileName] = replacer;
+            }
+            Modified = true;
         }
 
         private void AssetsViewer_Closing(object sender, CancelEventArgs e)
