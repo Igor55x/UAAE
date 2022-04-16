@@ -58,6 +58,22 @@ namespace AssetsAdvancedEditor.Winforms
 
             CloseAllFiles();
 
+            if (fileType != DetectedFileType.Unknown)
+            {
+                if (selectedFile.EndsWith(".split0"))
+                {
+                    var splitFilePath = AskLoadSplitFile(selectedFile);
+                    switch (splitFilePath)
+                    {
+                        case null:
+                            return;
+                        default:
+                            selectedFile = splitFilePath;
+                            break;
+                    }
+                }
+            }
+
             switch (fileType)
             {
                 case DetectedFileType.AssetsFile:
@@ -74,6 +90,47 @@ namespace AssetsAdvancedEditor.Winforms
                     MsgBoxUtils.ShowErrorDialog("Unable to read the file!\n" +
                                                 "Invalid file or unknown (unsupported) version.");
                     break;
+            }
+        }
+
+        private static string AskLoadSplitFile(string selectedFile)
+        {
+            var choice = MsgBoxUtils.ShowInfoDialog($"Split file detected! This file ends with .split0.\n" +
+                                       "Would you like to create merged file?", MessageBoxButtons.YesNoCancel);
+
+            switch (choice)
+            {
+                case DialogResult.Yes:
+                    {
+                        var sfd = new SaveFileDialog
+                        {
+                            Title = @"Save merged file",
+                            Filter = @"All types (*.*)|*.*|Assets file (*.assets)|*.assets",
+                            FileName = Path.GetFileNameWithoutExtension(selectedFile)
+                        };
+                        if (sfd.ShowDialog() != DialogResult.OK) return null;
+
+                        var mergeFilePath = sfd.FileName;
+                        using (var mergeFile = File.OpenWrite(mergeFilePath))
+                        {
+                            var idx = 0;
+                            var thisSplitFileNoNum = selectedFile[..^1];
+                            var thisSplitFileNum = selectedFile;
+                            while (File.Exists(thisSplitFileNum))
+                            {
+                                using (var thisSplitFile = File.OpenRead(thisSplitFileNum))
+                                {
+                                    thisSplitFile.CopyTo(mergeFile);
+                                }
+                                thisSplitFileNum = $"{thisSplitFileNoNum}{++idx}";
+                            };
+                        }
+                        return mergeFilePath;
+                    }
+                case DialogResult.No:
+                    return selectedFile;
+                default:
+                    return null;
             }
         }
 

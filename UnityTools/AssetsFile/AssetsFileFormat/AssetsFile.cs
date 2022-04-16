@@ -275,11 +275,6 @@ namespace UnityTools
             if (possibleHeader == "Unity" || possibleHeader.StartsWith("MZ") || possibleHeader.StartsWith("FSB5"))
                 return false;
 
-            reader.Position = offset;
-            var metadataSize = reader.ReadUInt32();
-            if (metadataSize < 8)
-                return false;
-
             reader.Position = offset + 0x08;
             var possibleFormat = reader.ReadInt32();
             if (possibleFormat > 99)

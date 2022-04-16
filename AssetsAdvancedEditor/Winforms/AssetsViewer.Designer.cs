@@ -189,7 +189,7 @@
             this.btnViewData.TabIndex = 10;
             this.btnViewData.Text = "View Data";
             this.btnViewData.UseVisualStyleBackColor = true;
-            this.btnViewData.Click += new System.EventHandler(this.btnViewData_Click);
+            this.btnViewData.Click += new System.EventHandler(this.BtnViewData_Click);
             // 
             // btnExportRaw
             // 
@@ -201,7 +201,7 @@
             this.btnExportRaw.TabIndex = 11;
             this.btnExportRaw.Text = "Export Raw";
             this.btnExportRaw.UseVisualStyleBackColor = true;
-            this.btnExportRaw.Click += new System.EventHandler(this.btnExportRaw_Click);
+            this.btnExportRaw.Click += new System.EventHandler(this.BtnExportRaw_Click);
             // 
             // btnExportDump
             // 
@@ -213,7 +213,7 @@
             this.btnExportDump.TabIndex = 12;
             this.btnExportDump.Text = "Export Dump";
             this.btnExportDump.UseVisualStyleBackColor = true;
-            this.btnExportDump.Click += new System.EventHandler(this.btnExportDump_Click);
+            this.btnExportDump.Click += new System.EventHandler(this.BtnExportDump_Click);
             // 
             // btnImportRaw
             // 
@@ -225,7 +225,7 @@
             this.btnImportRaw.TabIndex = 13;
             this.btnImportRaw.Text = "Import Raw";
             this.btnImportRaw.UseVisualStyleBackColor = true;
-            this.btnImportRaw.Click += new System.EventHandler(this.btnImportRaw_Click);
+            this.btnImportRaw.Click += new System.EventHandler(this.BtnImportRaw_Click);
             // 
             // btnImportDump
             // 
@@ -237,7 +237,7 @@
             this.btnImportDump.TabIndex = 14;
             this.btnImportDump.Text = "Import Dump";
             this.btnImportDump.UseVisualStyleBackColor = true;
-            this.btnImportDump.Click += new System.EventHandler(this.btnImportDump_Click);
+            this.btnImportDump.Click += new System.EventHandler(this.BtnImportDump_Click);
             // 
             // btnEdit
             // 
@@ -249,7 +249,7 @@
             this.btnEdit.TabIndex = 15;
             this.btnEdit.Text = "Edit";
             this.btnEdit.UseVisualStyleBackColor = true;
-            this.btnEdit.Click += new System.EventHandler(this.btnEdit_Click);
+            this.btnEdit.Click += new System.EventHandler(this.BtnEdit_Click);
             // 
             // btnRemove
             // 
@@ -261,7 +261,7 @@
             this.btnRemove.TabIndex = 16;
             this.btnRemove.Text = "Remove";
             this.btnRemove.UseVisualStyleBackColor = true;
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            this.btnRemove.Click += new System.EventHandler(this.BtnRemove_Click);
             // 
             // btnAdd
             // 
@@ -273,7 +273,7 @@
             this.btnAdd.TabIndex = 17;
             this.btnAdd.Text = "Add";
             this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnAdd.Click += new System.EventHandler(this.BtnAdd_Click);
             // 
             // menuStrip1
             // 
@@ -466,8 +466,8 @@
             this.assetList.TabIndex = 19;
             this.assetList.UseCompatibleStateImageBehavior = false;
             this.assetList.View = System.Windows.Forms.View.Details;
-            this.assetList.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.assetList_ItemSelectionChanged);
-            this.assetList.SelectedIndexChanged += new System.EventHandler(this.assetList_SelectedIndexChanged);
+            this.assetList.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.AssetList_ItemSelectionChanged);
+            this.assetList.SelectedIndexChanged += new System.EventHandler(this.AssetList_SelectedIndexChanged);
             // 
             // nameColumn
             // 

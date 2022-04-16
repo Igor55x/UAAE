@@ -196,7 +196,7 @@ namespace AssetsAdvancedEditor.Winforms
             assetList.Select();
         }
 
-        private void assetList_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        private void AssetList_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             if (Workspace.LoadedAssets.Count != assetList.Items.Count) return;  // shouldn't happen
             var details = (AssetItem)assetList.Items[e.ItemIndex];
@@ -219,7 +219,7 @@ namespace AssetsAdvancedEditor.Winforms
             boxMonoID.Text = $@"0x{ushort.MaxValue:X8}";
         }
 
-        private void assetList_SelectedIndexChanged(object sender, EventArgs e)
+        private void AssetList_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (GetSelectedCount() is not 0) return;
             boxName.Text = "";
@@ -229,7 +229,7 @@ namespace AssetsAdvancedEditor.Winforms
             boxMonoID.Text = "";
         }
 
-        private void btnViewData_Click(object sender, EventArgs e)
+        private void BtnViewData_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var baseFields = GetSelectedFields();
@@ -372,7 +372,7 @@ namespace AssetsAdvancedEditor.Winforms
             Close();
         }
 
-        private void btnExportRaw_Click(object sender, EventArgs e)
+        private void BtnExportRaw_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var selectedItems = GetSelectedAssets();
@@ -405,7 +405,7 @@ namespace AssetsAdvancedEditor.Winforms
             }
         }
 
-        private void SingleExportRaw(AssetItem selectedItem)
+        private static void SingleExportRaw(AssetItem selectedItem)
         {
             var name = Extensions.ReplaceInvalidFileNameChars(selectedItem.Name);
             if (string.IsNullOrEmpty(name))
@@ -422,7 +422,7 @@ namespace AssetsAdvancedEditor.Winforms
             AssetExporter.ExportRawAsset(sfd.FileName, selectedItem);
         }
 
-        private void btnExportDump_Click(object sender, EventArgs e)
+        private void BtnExportDump_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var selectedItems = GetSelectedAssets();
@@ -489,7 +489,7 @@ namespace AssetsAdvancedEditor.Winforms
             AssetExporter.ExportDump(sfd.FileName, Workspace.GetBaseField(selectedItem), dumpType);
         }
 
-        private void btnImportRaw_Click(object sender, EventArgs e)
+        private void BtnImportRaw_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var selectedItems = GetSelectedAssets();
@@ -542,7 +542,7 @@ namespace AssetsAdvancedEditor.Winforms
             Workspace.AddReplacer(ref selectedItem, replacer);
         }
 
-        private void btnImportDump_Click(object sender, EventArgs e)
+        private void BtnImportDump_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var selectedItems = GetSelectedAssets();
@@ -613,7 +613,7 @@ namespace AssetsAdvancedEditor.Winforms
             Workspace.AddReplacer(ref selectedItem, replacer);
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
+        private void BtnEdit_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             var items = GetSelectedAssets();
@@ -622,7 +622,7 @@ namespace AssetsAdvancedEditor.Winforms
             SelectModifiedAssets();
         }
 
-        private void btnAdd_Click(object sender, EventArgs e)
+        private void BtnAdd_Click(object sender, EventArgs e)
         {
             var dialog = new AddAssets(Workspace);
             if (dialog.ShowDialog() != DialogResult.OK) return;
@@ -630,7 +630,7 @@ namespace AssetsAdvancedEditor.Winforms
             AddAssetItems(dialog.Items);
         }
 
-        private void btnRemove_Click(object sender, EventArgs e)
+        private void BtnRemove_Click(object sender, EventArgs e)
         {
             if (FailIfNothingSelected()) return;
             RemoveAssetItems();
