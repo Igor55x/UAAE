@@ -602,6 +602,7 @@ namespace AssetsAdvancedEditor.Winforms
                 Filter = @"UAAE text dump (*.txt)|*.txt|UAAE xml dump (*.xml)|*.xml|UAAE json dump (*.json)|*.json"
             };
             if (ofd.ShowDialog() != DialogResult.OK) return;
+
             var dumpType = ofd.FilterIndex switch
             {
                 1 => DumpType.TXT,

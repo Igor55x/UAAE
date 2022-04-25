@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Forms;
 using AssetsAdvancedEditor.Assets;
 using AssetsAdvancedEditor.Plugins;
+using AssetsAdvancedEditor.Utils;
 using UnityTools;
 
 namespace Plugins.Texture.Options
@@ -31,11 +32,29 @@ namespace Plugins.Texture.Options
         public override bool ExecutePlugin(IWin32Window owner, AssetsWorkspace workspace, List<AssetItem> selectedItems)
         {
             var item = selectedItems[0];
-
+            var fileInst = item.Cont.FileInstance;
+            var errorAssetName = $"{Path.GetFileName(fileInst.path)}/{item.PathID}";
             var texField = TextureHelper.GetByteArrayTexture(workspace, item).GetBaseField();
-
             var texFile = TextureFile.ReadTextureFile(texField);
-            var editTexDialog = new EditTextureDialog(texFile, texField);
+
+            //bundle resS
+            if (!TextureHelper.GetResSTexture(texFile, fileInst))
+            {
+                var resSName = Path.GetFileName(texFile.m_StreamData.path);
+                MsgBoxUtils.ShowErrorDialog($"[{errorAssetName}]: resS was detected but {resSName} was not found in bundle");
+                return false;
+            }
+
+            var data = TextureHelper.GetRawTextureBytes(texFile, fileInst);
+
+            if (data == null)
+            {
+                var resSName = Path.GetFileName(texFile.m_StreamData.path);
+                MsgBoxUtils.ShowErrorDialog(owner, $"[{errorAssetName}]: resS was detected but {resSName} was not found on disk");
+                return false;
+            }
+
+            var editTexDialog = new TextureEditor(texFile, texField, data);
             if (editTexDialog.ShowDialog(owner) != DialogResult.OK)
                 return false;
 

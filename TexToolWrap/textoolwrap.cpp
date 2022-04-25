@@ -182,7 +182,7 @@ EXPORT unsigned int EncodeByPVRTexLib(void* data, void* outBuf, int mode, int le
 
 EXPORT unsigned int EncodeByISPC(void* data, void* outBuf, int mode, int level, unsigned int width, unsigned int height)
 {
-	rgba_surface surface;
+	rgba_surface surface{};
 	surface.ptr = (uint8_t*)data;
 	surface.width = width;
 	surface.height = height;

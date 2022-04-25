@@ -61,7 +61,7 @@ namespace Plugins.Texture.Options
                 var file = Path.Combine(dir, $"{fixedName}-{Path.GetFileName(fileInst.path)}-{item.PathID}.png");
 
                 //bundle resS
-                if (!TextureHelper.GetResSTexture(texFile, item))
+                if (!TextureHelper.GetResSTexture(texFile, fileInst))
                 {
                     var resSName = Path.GetFileName(texFile.m_StreamData.path);
                     errorBuilder.AppendLine($"[{errorAssetName}]: resS was detected but {resSName} was not found in bundle");

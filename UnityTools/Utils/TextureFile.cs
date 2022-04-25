@@ -210,72 +210,270 @@ namespace UnityTools
         }
     }
 
+    public enum FilterMode
+    {
+        Point,
+        Bilinear,
+        Trilinear
+    }
+
+    public enum WrapMode
+    {
+        Repeat,
+        Clamp,
+        Mirror,
+        MirrorOnce
+    }
+
+    public enum ColorSpace
+    {
+        Gamma,
+        Linear
+    }
+
     public enum TextureFormat
     {
-        Alpha8 = 1, //Unity 1.5 or earlier (already in 1.2.2 according to documentation)
-        ARGB4444, //Unity 3.0 (already in 1.2.2)
-        RGB24, //Unity 1.5 or earlier (already in 1.2.2)
-        RGBA32, //Unity 3.2 (not sure about 1.2.2)
-        ARGB32, //Unity 1.5 or earlier (already in 1.2.2)
+        /// <summary>
+        /// Unity 1.5 or earlier (already in 1.2.2 according to documentation)
+        /// </summary>
+        Alpha8 = 1,
+        /// <summary>
+        /// Unity 3.0 (already in 1.2.2)
+        /// </summary>
+        ARGB4444,
+        /// <summary>
+        /// Unity 1.5 or earlier (already in 1.2.2)
+        /// </summary>
+        RGB24,
+        /// <summary>
+        /// Unity 3.2 (not sure about 1.2.2)
+        /// </summary>
+        RGBA32,
+        /// <summary>
+        /// Unity 1.5 or earlier (already in 1.2.2)
+        /// </summary>
+        ARGB32,
         UNUSED06,
-        RGB565, //Unity 3.0 (already in 1.2.2)
+        /// <summary>
+        /// Unity 3.0 (already in 1.2.2)
+        /// </summary>
+        RGB565,
         UNUSED08,
-        R16, //Unity 5.0
-        DXT1, //Unity 2.0 (already in 1.2.2)
-        UNUSED11, //(DXT3 in 1.2.2?)
-        DXT5, //Unity 2.0
-        RGBA4444, //Unity 4.1
-        BGRA32New, //Unity 4.5
-        RHalf, //Unity 5.0
-        RGHalf, //Unity 5.0
-        RGBAHalf, //Unity 5.0
-        RFloat, //Unity 5.0
-        RGFloat, //Unity 5.0
-        RGBAFloat, //Unity 5.0
-        YUY2, //Unity 5.0
-        RGB9e5Float, //Unity 5.6
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        R16,
+        /// <summary>
+        /// Unity 2.0 (already in 1.2.2)
+        /// </summary>
+        DXT1,
+        /// <summary>
+        /// DXT3 in 1.2.2 ?
+        /// </summary>
+        UNUSED11,
+        /// <summary>
+        /// Unity 2.0
+        /// </summary>
+        DXT5,
+        /// <summary>
+        /// Unity 4.1
+        /// </summary>
+        RGBA4444,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        BGRA32New,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RHalf,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RGHalf,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RGBAHalf,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RFloat,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RGFloat,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        RGBAFloat,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        YUY2,
+        /// <summary>
+        /// Unity 5.6
+        /// </summary>
+        RGB9e5Float,
         UNUSED23,
-        BC6H, //Unity 5.5
-        BC7, //Unity 5.5
-        BC4, //Unity 5.5
-        BC5, //Unity 5.5
-        DXT1Crunched, //Unity 5.0 //SupportsTextureFormat version codes 0 (original) and 1 (Unity 2017.3)
-        DXT5Crunched, //Unity 5.0 //SupportsTextureFormat version codes 0 (original) and 1 (Unity 2017.3)
-        PVRTC_RGB2, //Unity 2.6
-        PVRTC_RGBA2, //Unity 2.6
-        PVRTC_RGB4, //Unity 2.6
-        PVRTC_RGBA4, //Unity 2.6
-        ETC_RGB4, //Unity 3.0
-        ATC_RGB4, //Unity 3.4, removed in 2018.1
-        ATC_RGBA8, //Unity 3.4, removed in 2018.1
-        BGRA32Old, //Unity 3.4, removed in Unity 4.5
+        /// <summary>
+        /// Unity 5.5
+        /// </summary>
+        BC6H,
+        /// <summary>
+        /// Unity 5.5
+        /// </summary>
+        BC7,
+        /// <summary>
+        /// Unity 5.5
+        /// </summary>
+        BC4,
+        /// <summary>
+        /// Unity 5.5
+        /// </summary>
+        BC5,
+        /// <summary>
+        /// Unity 5.0 //SupportsTextureFormat version codes 0 (original) and 1 (Unity 2017.3)
+        /// </summary>
+        DXT1Crunched,
+        /// <summary>
+        /// Unity 5.0 //SupportsTextureFormat version codes 0 (original) and 1 (Unity 2017.3)
+        /// </summary>
+        DXT5Crunched,
+        /// <summary>
+        /// Unity 2.6
+        /// </summary>
+        PVRTC_RGB2,
+        /// <summary>
+        /// Unity 2.6
+        /// </summary>
+        PVRTC_RGBA2,
+        /// <summary>
+        /// Unity 2.6
+        /// </summary>
+        PVRTC_RGB4,
+        /// <summary>
+        /// Unity 2.6
+        /// </summary>
+        PVRTC_RGBA4,
+        /// <summary>
+        /// Unity 3.0
+        /// </summary>
+        ETC_RGB4,
+        /// <summary>
+        /// Unity 3.4, removed in 2018.1
+        /// </summary>
+        ATC_RGB4,
+        /// <summary>
+        /// Unity 3.4, removed in 2018.1
+        /// </summary>
+        ATC_RGBA8,
+        /// <summary>
+        /// Unity 3.4, removed in Unity 4.5
+        /// </summary>
+        BGRA32Old,
         UNUSED38, //TexFmt_ATF_RGB_DXT1, added in Unity 3.5, removed in Unity 5.0
         UNUSED39, //TexFmt_ATF_RGBA_JPG, added in Unity 3.5, removed in Unity 5.0
         UNUSED40, //TexFmt_ATF_RGB_JPG, added in Unity 3.5, removed in Unity 5.0
-        EAC_R, //Unity 4.5
-        EAC_R_SIGNED, //Unity 4.5
-        EAC_RG, //Unity 4.5
-        EAC_RG_SIGNED, //Unity 4.5
-        ETC2_RGB4, //Unity 4.5
-        ETC2_RGBA1, //Unity 4.5 //R4G4B4A1
-        ETC2_RGBA8, //Unity 4.5 //R8G8B8A8
-        ASTC_RGB_4x4, //Unity 4.5
-        ASTC_RGB_5x5, //Unity 4.5
-        ASTC_RGB_6x6, //Unity 4.5
-        ASTC_RGB_8x8, //Unity 4.5
-        ASTC_RGB_10x10, //Unity 4.5
-        ASTC_RGB_12x12, //Unity 4.5
-        ASTC_RGBA_4x4, //Unity 4.5
-        ASTC_RGBA_5x5, //Unity 4.5
-        ASTC_RGBA_6x6, //Unity 4.5
-        ASTC_RGBA_8x8, //Unity 4.5
-        ASTC_RGBA_10x10, //Unity 4.5
-        ASTC_RGBA_12x12, //Unity 4.5
-        ETC_RGB4_3DS, //Unity 5.0
-        ETC_RGBA8_3DS, //Unity 5.0
-        RG16, //Unity 2017.1
-        R8, //Unity 2017.1
-        ETC_RGB4Crunched, //Unity 2017.3  //SupportsTextureFormat version code 1
-        ETC2_RGBA8Crunched //Unity 2017.3  //SupportsTextureFormat version code 1
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        EAC_R,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        EAC_R_SIGNED,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        EAC_RG,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        EAC_RG_SIGNED,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ETC2_RGB4,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ETC2_RGBA1,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ETC2_RGBA8,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_4x4,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_5x5,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_6x6,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_8x8,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_10x10,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGB_12x12,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_4x4,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_5x5,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_6x6,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_8x8,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_10x10,
+        /// <summary>
+        /// Unity 4.5
+        /// </summary>
+        ASTC_RGBA_12x12,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        ETC_RGB4_3DS,
+        /// <summary>
+        /// Unity 5.0
+        /// </summary>
+        ETC_RGBA8_3DS,
+        /// <summary>
+        /// Unity 2017.1
+        /// </summary>
+        RG16,
+        /// <summary>
+        /// Unity 2017.1
+        /// </summary>
+        R8,
+        /// <summary>
+        /// Unity 2017.3  //SupportsTextureFormat version code 1
+        /// </summary>
+        ETC_RGB4Crunched,
+        /// <summary>
+        /// Unity 2017.3  //SupportsTextureFormat version code 1
+        /// </summary>
+        ETC2_RGBA8Crunched
     }
 }

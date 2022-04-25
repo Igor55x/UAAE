@@ -1,6 +1,6 @@
 ﻿namespace Plugins.Texture
 {
-    partial class EditTextureDialog
+    partial class TextureEditor
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditTextureDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TextureEditor));
             this.lblTextureName = new System.Windows.Forms.Label();
             this.tboxTextureName = new System.Windows.Forms.TextBox();
             this.lblTextureFormat = new System.Windows.Forms.Label();
@@ -134,10 +134,6 @@
             // cboxFilterMode
             // 
             this.cboxFilterMode.FormattingEnabled = true;
-            this.cboxFilterMode.Items.AddRange(new object[] {
-            "Point",
-            "Bilinear",
-            "Trilinear"});
             this.cboxFilterMode.Location = new System.Drawing.Point(141, 122);
             this.cboxFilterMode.Name = "cboxFilterMode";
             this.cboxFilterMode.Size = new System.Drawing.Size(143, 23);
@@ -187,11 +183,6 @@
             // cboxWrapU
             // 
             this.cboxWrapU.FormattingEnabled = true;
-            this.cboxWrapU.Items.AddRange(new object[] {
-            "Repeat",
-            "Clamp",
-            "Mirror",
-            "MirrorOnce"});
             this.cboxWrapU.Location = new System.Drawing.Point(141, 209);
             this.cboxWrapU.Name = "cboxWrapU";
             this.cboxWrapU.Size = new System.Drawing.Size(143, 23);
@@ -209,11 +200,6 @@
             // cboxWrapV
             // 
             this.cboxWrapV.FormattingEnabled = true;
-            this.cboxWrapV.Items.AddRange(new object[] {
-            "Repeat",
-            "Clamp",
-            "Mirror",
-            "MirrorOnce"});
             this.cboxWrapV.Location = new System.Drawing.Point(141, 238);
             this.cboxWrapV.Name = "cboxWrapV";
             this.cboxWrapV.Size = new System.Drawing.Size(143, 23);
@@ -247,9 +233,6 @@
             // cboxColorSpace
             // 
             this.cboxColorSpace.FormattingEnabled = true;
-            this.cboxColorSpace.Items.AddRange(new object[] {
-            "Gamma",
-            "Linear"});
             this.cboxColorSpace.Location = new System.Drawing.Point(141, 296);
             this.cboxColorSpace.Name = "cboxColorSpace";
             this.cboxColorSpace.Size = new System.Drawing.Size(143, 23);
@@ -281,7 +264,7 @@
             this.btnLoad.TabIndex = 23;
             this.btnLoad.Text = "Load";
             this.btnLoad.UseVisualStyleBackColor = true;
-            this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
+            this.btnLoad.Click += new System.EventHandler(this.BtnLoad_Click);
             // 
             // btnView
             // 
@@ -291,7 +274,7 @@
             this.btnView.TabIndex = 24;
             this.btnView.Text = "View";
             this.btnView.UseVisualStyleBackColor = true;
-            this.btnView.Click += new System.EventHandler(this.btnView_Click);
+            this.btnView.Click += new System.EventHandler(this.BtnView_Click);
             // 
             // cboxTextureQuality
             // 
@@ -352,9 +335,9 @@
             this.btnOK.TabIndex = 29;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
+            this.btnOK.Click += new System.EventHandler(this.BtnOK_Click);
             // 
-            // EditTextureDialog
+            // TextureEditor
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -396,7 +379,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "EditTextureDialog";
+            this.Name = "TextureEditor";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Texture2D";
             this.ResumeLayout(false);

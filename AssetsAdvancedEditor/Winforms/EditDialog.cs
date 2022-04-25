@@ -8,29 +8,29 @@ namespace AssetsAdvancedEditor.Winforms
 {
     public partial class EditDialog : Form
     {
-        private IWin32Window owner { get; }
-        private AssetsWorkspace workspace { get; }
-        private List<AssetItem> selectedItems { get; }
+        private new IWin32Window Owner { get; }
+        private AssetsWorkspace Workspace { get; }
+        private List<AssetItem> SelectedItems { get; }
         public EditDialog(IWin32Window owner, AssetsWorkspace workspace, List<AssetItem> selectedItems)
         {
             InitializeComponent();
 
-            this.owner = owner;
-            this.workspace = workspace;
-            this.selectedItems = selectedItems;
-            var plugInfs = workspace.Pm.GetSupportedPlugins(selectedItems);
-            foreach (var plugInfo in plugInfs)
+            Owner = owner;
+            Workspace = workspace;
+            SelectedItems = selectedItems;
+            var plugInfos = workspace.Pm.GetSupportedPlugins(selectedItems);
+            foreach (var plugInfo in plugInfos)
             {
                 lboxPluginsList.Items.Add(plugInfo);
             }
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void BtnOK_Click(object sender, EventArgs e)
         {
-            if (lboxPluginsList.SelectedItem is PluginMenuInfo menuPlugInf)
+            if (lboxPluginsList.SelectedItem is PluginMenuInfo plugInfo)
             {
-                var plugOption = menuPlugInf.PluginOpt;
-                plugOption.ExecutePlugin(owner, workspace, selectedItems);
+                var plugOption = plugInfo.PluginOpt;
+                plugOption.ExecutePlugin(Owner, Workspace, SelectedItems);
             }
         }
     }

@@ -45,7 +45,12 @@ namespace Plugins.Texture
 
         public static bool GetResSTexture(TextureFile texFile, AssetItem item)
         {
-            var parentBundle = item.Cont.FileInstance.parentBundle;
+            return GetResSTexture(texFile, item.Cont.FileInstance);
+        }
+
+        public static bool GetResSTexture(TextureFile texFile, AssetsFileInstance inst)
+        {
+            var parentBundle = inst.parentBundle;
             var streamInfo = texFile.m_StreamData;
             var searchPath = streamInfo.path;
             if (!string.IsNullOrEmpty(searchPath) && parentBundle != null)

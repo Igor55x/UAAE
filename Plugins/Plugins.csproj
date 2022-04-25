@@ -28,6 +28,12 @@
     <ProjectReference Include="..\UnityTools\UnityTools.csproj" />
   </ItemGroup>
   
+  <ItemGroup>
+    <Compile Update="Texture\TextureViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  
 <!-- this will only execute once while building the solution -->
   <!-- this should set UAAENativeConfig with the config, but  -->
   <!-- the actual copying has to be copy and pasted to work    -->
